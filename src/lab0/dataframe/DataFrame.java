@@ -18,6 +18,16 @@ public class DataFrame {
             this.nazwa=new String(source.nazwa);
             this.typ=new String(source.typ);
         }
+
+        @Override
+        public String toString() {
+
+            StringBuilder s=new StringBuilder();
+            s.append(nazwa+" : "+typ+'\n');
+            for(Object o:dane)
+                s.append(o.toString()+'\n');
+            return s.toString();
+        }
     }
 
     private Kolumna[] kolumny;
@@ -71,6 +81,7 @@ public class DataFrame {
         if(vals.length!=kolumny.length)
             throw new RuntimeException("This shoudn't happen, but i can see why could");
         int i=0;
+        rowNumber++;
         for(Kolumna k:kolumny)
             k.dane.add(vals[i++]);
     }
@@ -95,13 +106,28 @@ public class DataFrame {
         DataFrame df=new DataFrame(typy,nazwy);
         Object[] temp=new Object[kolumny.length];
 
-        for(int i=from;i<to;i++){
+        for(int i=from;i<=to;i++){
+            int j=0;
             for(Kolumna k:kolumny)
-               temp[i]=k.dane.get(i);
+               temp[j++]=k.dane.get(i);
 
             df.addRecord(temp);
         }
 
         return df;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s=new StringBuilder();
+        for(Kolumna k:kolumny)
+            s.append("|"+k.nazwa+":"+k.typ);
+        s.append("|\n");
+        for(int i=0;i<rowNumber;i++){
+            for(Kolumna k:kolumny)
+                s.append("|"+k.dane.get(i).toString());
+            s.append("|\n");
+        }
+        return s.toString();
     }
 }

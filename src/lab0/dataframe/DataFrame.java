@@ -1,22 +1,41 @@
 package lab0.dataframe;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
 public class DataFrame {
-    class Kolumna{
+    public class Kolumna{
         ArrayList dane;
         String nazwa;
-        String typ;
-        Kolumna(String nazwa,String typ){
+        DataType typ;
+        Kolumna(String nazwa,DataType typ){
             dane = new ArrayList();
             this.nazwa=nazwa;
             this.typ=typ;
         }
+
         Kolumna(Kolumna source){
             dane = new ArrayList(source.dane);
             this.nazwa=new String(source.nazwa);
-            this.typ=new String(source.typ);
+            this.typ=source.typ;
+
+        }
+        public Object get(int index){
+            return dane.get(index);
+        }
+
+        void add(Object o){
+            dane.add(o);
+        }
+        public int size(){
+            return dane.size();
         }
 
         @Override
@@ -30,15 +49,66 @@ public class DataFrame {
         }
     }
 
-    private Kolumna[] kolumny;
-    private int rowNumber;
+    protected Kolumna[] kolumny;
+    protected int rowNumber;
 
+    //todo: implement header true- false
+    protected void readFile(String path, boolean header) throws IOException {
+        FileInputStream fstream = new FileInputStream(path);
+        BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+
+        String[] strLine;
+
+        if(header)
+        {
+            strLine=br.readLine().split(",");
+            for (int i = 0; i < kolumny.length; i++) {
+                kolumny[i].nazwa=strLine[i];
+            }
+        }
+
+        String temp;
+        Object[] tempValues=new Object[kolumny.length];
+        while((temp=br.readLine())!=null)
+        {
+            strLine=temp.split(",");
+            int i=0;
+            for(String s:strLine) {
+                tempValues[i] = DataType.fromString(kolumny[i].typ, s);
+                i++;
+            }
+            addRecord(tempValues);
+        }
+
+        br.close();
+
+    }
+    public DataFrame(String path,String[] typykolumn,boolean header) throws IOException{
+        kolumny=new Kolumna[typykolumn.length];
+        for(int i=0;i<typykolumn.length;i++)
+            kolumny[i]=new Kolumna("",DataType.getDataType(typykolumn[i]));
+        readFile(path,header);
+    }
+    protected DataFrame(int count){
+        kolumny=new Kolumna[count];
+        rowNumber=0;
+    }
+    public DataFrame(String[] nazwyKolumn,DataType[] typyKolumn){
+        construct(nazwyKolumn,typyKolumn);
+    }
     public DataFrame(String[] nazwyKolumn,String[] typyKolumn){
+        DataType[] types=new DataType[typyKolumn.length];
+        for(int i =0; i<typyKolumn.length;i++)
+            types[i]=DataType.getDataType(typyKolumn[i]);
+        construct(nazwyKolumn,types);
+    }
+    protected void construct(String[] nazwyKolumn,DataType[] typyKolumn){
         kolumny=new Kolumna[typyKolumn.length];
         for(int i =0; i<typyKolumn.length;i++)
             kolumny[i]=new Kolumna(nazwyKolumn[i],typyKolumn[i]);
         rowNumber=0;
     }
+
 
     public DataFrame(Kolumna[] kolumny){
         this.kolumny=kolumny;
@@ -52,6 +122,20 @@ public class DataFrame {
         return rowNumber;
     }
 
+    public String[] getNames(){
+        String[] names = new String[kolumny.length];
+        for(int i=0;i<kolumny.length;i++)
+            names[i]=kolumny[i].nazwa;
+        return names;
+    }
+
+    public DataType[] getTypes(){
+        DataType[] types= new DataType[kolumny.length];
+        for(int i=0;i<kolumny.length;i++)
+            types[i]=kolumny[i].typ;
+        return types;
+    }
+
     public Kolumna get(String colname){
         for (Kolumna k:kolumny)
             if(k.nazwa.equals(colname))
@@ -59,7 +143,8 @@ public class DataFrame {
 
         throw new NoSuchElementException("No such column: "+colname);
     }
-
+    //todo: get record
+    //todo: override for Sparse
     public DataFrame get(String[] cols,boolean copy){
         Kolumna[] kolumny = new Kolumna[cols.length];
 
@@ -77,13 +162,14 @@ public class DataFrame {
         return iloc(i,i);
     }
 
-    public void addRecord(Object[] vals){
+    public void addRecord(Object... vals){
         if(vals.length!=kolumny.length)
             throw new RuntimeException("This shoudn't happen, but i can see why could");
         int i=0;
         rowNumber++;
         for(Kolumna k:kolumny)
-            k.dane.add(vals[i++]);
+            k.add(vals[i++]);
+
     }
 
     public DataFrame iloc(int from ,int to){
@@ -100,10 +186,10 @@ public class DataFrame {
         String[] nazwy = new String[kolumny.length];
         for(int i=0;i<kolumny.length;i++) {
             nazwy[i] = new String(kolumny[i].nazwa);
-            typy[i] = new String(kolumny[i].typ);
+            typy[i] = kolumny[i].typ.id;
         }
 
-        DataFrame df=new DataFrame(typy,nazwy);
+        DataFrame df=new DataFrame(nazwy,typy);
         Object[] temp=new Object[kolumny.length];
 
         for(int i=from;i<=to;i++){
@@ -121,13 +207,15 @@ public class DataFrame {
     public String toString() {
         StringBuilder s=new StringBuilder();
         for(Kolumna k:kolumny)
-            s.append("|"+k.nazwa+":"+k.typ);
+            s.append("|"+k.nazwa+":"+k.typ.id);
         s.append("|\n");
         for(int i=0;i<rowNumber;i++){
             for(Kolumna k:kolumny)
-                s.append("|"+k.dane.get(i).toString());
+                s.append("|"+k.get(i).toString());
             s.append("|\n");
         }
         return s.toString();
     }
+
+
 }

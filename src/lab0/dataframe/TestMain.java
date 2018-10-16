@@ -1,10 +1,6 @@
 package lab0.dataframe;
 
 
-import java.util.ArrayList;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 public class TestMain {
 
     public static void main(String[] argv) throws Exception {
@@ -27,11 +23,10 @@ public class TestMain {
         System.out.println(df.get(new String[]{"A", "B"}, false));
         System.out.println(df.get(new String[]{"A", "B"}, true));
         System.out.println(df.get(new String[]{"A", "B"}, true) != df.get(new String[]{"A", "B"}, false));
-        df=new DataFrame("data.csv", new String[]{"float","float","float"}, true);
-        SparseDataFrame sf=new SparseDataFrame(new DataFrame("sparse.csv", new String[]{"float","float","float"}, true),new Object[]{0.0f,0.0f,0.0f});
+        df=new DataFrame("data.csv", new String[]{"float","float","float"});
+        SparseDataFrame sf=new SparseDataFrame("sparse.csv", new String[]{"float","float","float"},new Object[]{0.0f,0.0f,0.0f});
         //assertEquals(df.get("a").get(0),0.0f);
         System.out.println(sf);
-        System.out.println(sf.toStringActual());
 
     }
 

@@ -1,8 +1,5 @@
 package lab0.dataframe;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,29 +8,65 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
 public class DataFrame {
+    /**
+     * Data container
+    */
     public class Kolumna{
         ArrayList dane;
         String nazwa;
         DataType typ;
+
+        /**
+         *
+         * @param nazwa Kolumny
+         * @param typ Przechowywany typ danych
+         */
         Kolumna(String nazwa,DataType typ){
             dane = new ArrayList();
             this.nazwa=nazwa;
             this.typ=typ;
         }
 
+        /**
+         * Kopiowanie
+         * @param source klumna do skopiowania
+         */
         Kolumna(Kolumna source){
-            dane = new ArrayList(source.dane);
-            this.nazwa=new String(source.nazwa);
-            this.typ=source.typ;
 
+            this.nazwa=source.nazwa;
+            this.typ=source.typ;
+            dane = new ArrayList();
+            for(Object o:source.dane){
+                add(typ.cloneData(o));
+            }
         }
+
+
+
+        /**
+         * Accesor
+         * @param index wiersz
+         * @return Obiekt w wierzu I
+         */
         public Object get(int index){
             return dane.get(index);
         }
 
+        /**
+         *
+         * @param o nowy wiersz
+         */
         void add(Object o){
-            dane.add(o);
+            if(typ.isCorrectType(o))
+                dane.add(o);
+            else
+                throw new DFException("this shouldn't happen - illegal type");
         }
+
+        /**
+         *
+         * @return ilość elementyów
+         */
         public int size(){
             return dane.size();
         }
@@ -47,13 +80,17 @@ public class DataFrame {
                 s.append(o.toString()+'\n');
             return s.toString();
         }
-    }
 
+        public Kolumna copy(){
+            return new Kolumna(this);
+        }
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected Kolumna[] kolumny;
     protected int rowNumber;
 
-    //todo: implement header true- false
-    protected void readFile(String path, boolean header) throws IOException {
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    protected void readFile(String path, boolean header) throws IOException{
         FileInputStream fstream = new FileInputStream(path);
         BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
@@ -83,41 +120,53 @@ public class DataFrame {
         br.close();
 
     }
-    public DataFrame(String path,String[] typykolumn,boolean header) throws IOException{
-        kolumny=new Kolumna[typykolumn.length];
+
+    //true
+    public DataFrame(String path,String[] typykolumn) throws IOException{
+        this(path,typykolumn,null);
+    }
+
+    //false
+    public DataFrame(String path,String[] typykolumn,String[] nazwykolumn) throws IOException{
+        this(typykolumn.length);
+        boolean header = nazwykolumn==null;
         for(int i=0;i<typykolumn.length;i++)
-            kolumny[i]=new Kolumna("",DataType.getDataType(typykolumn[i]));
+            kolumny[i]=new Kolumna(header? "" : nazwykolumn[i],DataType.getDataType(typykolumn[i]));
         readFile(path,header);
     }
+
+
+
     protected DataFrame(int count){
         kolumny=new Kolumna[count];
         rowNumber=0;
     }
     public DataFrame(String[] nazwyKolumn,DataType[] typyKolumn){
+        this(nazwyKolumn.length);
         construct(nazwyKolumn,typyKolumn);
     }
     public DataFrame(String[] nazwyKolumn,String[] typyKolumn){
+        this(nazwyKolumn.length);
         DataType[] types=new DataType[typyKolumn.length];
         for(int i =0; i<typyKolumn.length;i++)
             types[i]=DataType.getDataType(typyKolumn[i]);
         construct(nazwyKolumn,types);
     }
-    protected void construct(String[] nazwyKolumn,DataType[] typyKolumn){
-        kolumny=new Kolumna[typyKolumn.length];
+    private void construct(String[] nazwyKolumn,DataType[] typyKolumn){
         for(int i =0; i<typyKolumn.length;i++)
             kolumny[i]=new Kolumna(nazwyKolumn[i],typyKolumn[i]);
-        rowNumber=0;
     }
 
 
     public DataFrame(Kolumna[] kolumny){
         this.kolumny=kolumny;
-        rowNumber=kolumny[0].dane.size();
+        rowNumber=kolumny[0].size();
         for(Kolumna k:kolumny)
-            if(k.dane.size()!=rowNumber)
-                throw new RuntimeException("this shouldn't happen");
+            if(k.size()!=rowNumber)
+                throw new DFException("this shouldn't happen");
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public int size(){
         return rowNumber;
     }
@@ -136,6 +185,12 @@ public class DataFrame {
         return types;
     }
 
+    /**
+     * getter kolumny o danej nazwie
+     * zwraca pierwsza kolumnę o danej nazwie
+     * @param colname
+     * @return kolumna
+     */
     public Kolumna get(String colname){
         for (Kolumna k:kolumny)
             if(k.nazwa.equals(colname))
@@ -143,28 +198,40 @@ public class DataFrame {
 
         throw new NoSuchElementException("No such column: "+colname);
     }
-    //todo: get record
-    //todo: override for Sparse
+
+    //todo: col name check
+    //todo: more exceptions - categorised
+    /**
+     * Get DataFrame o danych kolumnach
+     * @param cols nazwy kolumn
+     * @param copy wykonanie głębokiej kopii
+     * @return podzbiór dF
+     */
     public DataFrame get(String[] cols,boolean copy){
         Kolumna[] kolumny = new Kolumna[cols.length];
 
         for(int i=0;i<cols.length;i++)
             if(copy)
-                kolumny[i]=new Kolumna(get(cols[i]));
+                kolumny[i]=get(cols[i]).copy();
             else
                 kolumny[i]=get(cols[i]);
 
         return new DataFrame(kolumny);
     }
 
-    public DataFrame iloc(int i){
 
-        return iloc(i,i);
-    }
 
-    public void addRecord(Object... vals){
+    /**
+     * Dadanie rekordu do Dataframe
+     * @param vals elementy rekordu
+     */
+    public void addRecord(Object... vals) {
         if(vals.length!=kolumny.length)
-            throw new RuntimeException("This shoudn't happen, but i can see why could");
+            throw new DFException("This shoudn't happen, but i can see why could");
+        for(int i=0;i<kolumny.length;i++)
+            if(!kolumny[i].typ.isCorrectType(vals[i]))
+                throw new DFException("This shoudn't happen, but i can see why could");
+
         int i=0;
         rowNumber++;
         for(Kolumna k:kolumny)
@@ -172,32 +239,58 @@ public class DataFrame {
 
     }
 
+    /**
+     * Zwraca wiersz jako Array obiektów
+     * @param i nr.wiersz
+     * @return wiersz
+     */
+    public Object[] getRecord(int i){
+        Object[] temp=new Object[kolumny.length];
+        int j=0;
+        for(Kolumna k:kolumny)
+            temp[j++]=k.get(i);
+
+        return temp;
+    }
+
+    /**
+     * Zwraca wiersz jako DataFrame
+     * @param i nr wiersza
+     * @return Wiersz
+     */
+    public DataFrame iloc(int i){
+
+        return iloc(i,i);
+    }
+
+    /**
+     * Zwraca wiersze jako DataFrame
+     * @param from od
+     * @param to  do
+     * @return Wiersze
+     */
     public DataFrame iloc(int from ,int to){
         if(from<0 || from>=rowNumber)
-            throw new IndexOutOfBoundsException("No such index: "+from);
+            throw new DFException("No such index: "+from);
 
         if(to<0 || to>=rowNumber)
-            throw new IndexOutOfBoundsException("No such index: "+to);
+            throw new DFException("No such index: "+to);
 
         if(to<from)
-            throw new IndexOutOfBoundsException("unable to create range from "+from+" to "+to);
+            throw new DFException("unable to create range from "+from+" to "+to);
 
-        String[] typy = new String[kolumny.length];
         String[] nazwy = new String[kolumny.length];
+        DataType[] typy = new DataType[kolumny.length];
         for(int i=0;i<kolumny.length;i++) {
-            nazwy[i] = new String(kolumny[i].nazwa);
-            typy[i] = kolumny[i].typ.id;
+            nazwy[i] =kolumny[i].nazwa;
+            typy[i] = kolumny[i].typ;
         }
 
         DataFrame df=new DataFrame(nazwy,typy);
         Object[] temp=new Object[kolumny.length];
 
         for(int i=from;i<=to;i++){
-            int j=0;
-            for(Kolumna k:kolumny)
-               temp[j++]=k.dane.get(i);
-
-            df.addRecord(temp);
+            df.addRecord(getRecord(i));
         }
 
         return df;

@@ -1,40 +1,42 @@
 package test;
 
-import lab0.dataframe.DataFrame;
 import lab0.dataframe.DataType;
+import lab0.dataframe.SparseDataFrame;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
-class TestDF {
+class TestSDF {
 
-    private DataFrame df;
-    String[] names;
-    String[] types;
-    String[] str;
-    Integer[] ints;
-    Float[] floats;
+    static SparseDataFrame df;
+    static String[] names;
+    static String[] types;
+    static String[] str;
+    static Integer[] ints;
+    static Float[] floats;
+    static Object[] hidden;
 
-    @BeforeEach
-    void setUp() {
+    @BeforeAll
+    static void setUp() {
         System.out.println("Test Setup");
-        String[] names = {"A","B","C"};
-        String[] types = {"string","int","float"};
+        String[] names1 = {"A","B","C"};
+        String[] types1= {"string","int","float"};
+        Object[] hidden1= {"A",0,1.0f};
 
-        String[] str = {"A","B","C","D"};
-        Integer[] ints = {15,5,4,5};
-        Float[] floats = {17.0f,1.0f,7.0f,7.5f};
-        this.names=names;
-        this.types=types;
+        String[] str1 = {"A","B","C","D","A","A","A","A","A","A","A","A","A","A","D"};
+        Integer[] ints1 = {15,5,4,5,0,0,0,0,0,0,0,0,0,0,0};
+        Float[] floats1 = {17.0f,1.0f,7.0f,7.5f,1.0f,17.0f,1.0f,7.0f,7.5f,1.0f,17.0f,1.0f,7.0f,7.5f,1.0f};
+        names=names1;
+        types=types1;
 
-        this.str=str;
-        this.ints=ints;
-        this.floats=floats;
-
-         df = create(names,types,str,ints,floats);
+        str=str1;
+        ints=ints1;
+        floats=floats1;
+        hidden=hidden1;
+        df = create(names,types,hidden,str,ints,floats);
     }
 
     @Test
@@ -45,7 +47,18 @@ class TestDF {
                         "|A|15|17.0|\n" +
                         "|B|5|1.0|\n" +
                         "|C|4|7.0|\n" +
-                        "|D|5|7.5|\n",df.toString(),"ToString()");
+                        "|D|5|7.5|\n" +
+                        "|A|0|1.0|\n" +
+                        "|A|0|17.0|\n" +
+                        "|A|0|1.0|\n" +
+                        "|A|0|7.0|\n" +
+                        "|A|0|7.5|\n" +
+                        "|A|0|1.0|\n" +
+                        "|A|0|17.0|\n" +
+                        "|A|0|1.0|\n" +
+                        "|A|0|7.0|\n" +
+                        "|A|0|7.5|\n" +
+                        "|D|0|1.0|\n",df.toString(),"ToString()");
 
         assertArrayEquals(df.getNames(),names);
         DataType[] Dtypes = new DataType[types.length];
@@ -56,7 +69,7 @@ class TestDF {
 
     @Test
     void testGetKolumn() {
-        DataFrame.Kolumna kol = df.get(names[0]);
+        SparseDataFrame.SparseKolumna kol = df.get(names[0]);
         for(int i =0;i<kol.size();i++){
             Assertions.assertEquals(str[i],kol.get(i));
         }
@@ -73,7 +86,7 @@ class TestDF {
     @Test
     void testiloc() {
         for(int i=0;i<str.length;i++) {
-            DataFrame row1 = df.iloc(i);
+            SparseDataFrame row1 = df.iloc(i);
             Assertions.assertEquals(str[i],row1.get(names[0]).get(0));
             Assertions.assertEquals(ints[i],row1.get(names[1]).get(0));
             Assertions.assertEquals(floats[i],row1.get(names[2]).get(0));
@@ -81,7 +94,7 @@ class TestDF {
 
         for(int x=0;x<str.length;x++)
             for(int y=x;y<str.length;y++){
-                DataFrame rows23 = df.iloc(x,y);
+                SparseDataFrame rows23 = df.iloc(x,y);
                 for(int i=x, j=0;i<y;i++,j++){
                     Assertions.assertEquals(str[i],rows23.get(names[0]).get(j));
                     Assertions.assertEquals(ints[i],rows23.get(names[1]).get(j));
@@ -92,8 +105,8 @@ class TestDF {
 
     @Test
     void testShallowCopy() {
-        DataFrame a1 = df.get(new String[]{names[0],names[1]},false);
-        DataFrame b1 = df.get(new String[]{names[0],names[1]},false);
+        SparseDataFrame a1 = df.get(new String[]{names[0],names[1]},false);
+        SparseDataFrame b1 = df.get(new String[]{names[0],names[1]},false);
         for(int i=0;i<str.length;i++)
         {
             assertSame(a1.get(names[0]).get(i),b1.get(names[0]).get(i));
@@ -103,15 +116,17 @@ class TestDF {
 
     @Test
     void testDeepCopy(){
-        DataFrame a2 = df.get(new String[]{names[0],names[1]},true);
-        DataFrame b2 = df.get(new String[]{names[0],names[1]},true);
+        SparseDataFrame a2 = df.get(new String[]{names[0],names[1]},true);
+        SparseDataFrame b2 = df.get(new String[]{names[0],names[1]},true);
         assertNotSame(a2,b2);
         for(int i=0;i<str.length;i++)
         {
             System.out.println(names[0]+i);
             System.out.println(names[1]+i);
-            assertNotSame(a2.get(names[0]).get(i),b2.get(names[0]).get(i),names[0]+i );
-            assertNotSame(a2.get(names[1]).get(i),b2.get(names[1]).get(i),names[1]+i );
+            if(!a2.get(names[0]).get(i).equals(hidden[0]))
+                assertNotSame(a2.get(names[0]).get(i),b2.get(names[0]).get(i),names[0]+i );
+            if(!a2.get(names[1]).get(i).equals(hidden[1]))
+                assertNotSame(a2.get(names[1]).get(i),b2.get(names[1]).get(i),names[1]+i );
         }
 
     }
@@ -120,11 +135,12 @@ class TestDF {
     void testLoad() throws IOException{
         String[] cols={"id","do","str"};
         String[] typ={"int","double","string"};
+        Object[] hid={0,0.5,"A"};
         int[] colI = {0,1,2,3,4,5};
         double[] colII = {0.5,0.4,0.3,0.2,0.1,0.0};
         String[] colIII = {"A","B","C","D","E","F"};
 
-        DataFrame dfF = new DataFrame("test.csv",typ);
+        SparseDataFrame dfF = new SparseDataFrame("test.csv",typ,hid);
 
         for(int i=0;i<cols.length;i++){
             Assertions.assertEquals(colI[i],dfF.get(cols[0]).get(i));
@@ -133,7 +149,7 @@ class TestDF {
         }
 
 
-        DataFrame dfH = new DataFrame("test-noH.csv",typ,cols);
+        SparseDataFrame dfH = new SparseDataFrame("test-noH.csv",typ,hid,cols);
 
         for(int i=0;i<cols.length;i++){
             Assertions.assertEquals(colI[i],dfF.get(cols[0]).get(i));
@@ -146,9 +162,9 @@ class TestDF {
     }
 
 
-    DataFrame create(String[] names,String[] types,Object[] ... arrays){
+    static SparseDataFrame create(String[] names, String[] types ,Object[] hidden, Object[] ... arrays){
 
-        DataFrame df = new DataFrame(names,types);
+        SparseDataFrame df = new SparseDataFrame(names,types,hidden);
         Object[] v =new Object[types.length];
         for(int i=0;i<arrays[0].length;i++) {
             for (int j = 0; j < types.length; j++)

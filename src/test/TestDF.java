@@ -12,11 +12,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class TestDF {
 
     private DataFrame df;
-    String[] names;
-    String[] types;
-    String[] str;
-    Integer[] ints;
-    Float[] floats;
+    private String[] names;
+    private String[] types;
+    private String[] str;
+    private Integer[] ints;
+    private Float[] floats;
 
     @BeforeEach
     void setUp() {
@@ -48,10 +48,10 @@ class TestDF {
                         "|D|5|7.5|\n",df.toString(),"ToString()");
 
         assertArrayEquals(df.getNames(),names);
-        DataType[] Dtypes = new DataType[types.length];
+        DataType[] dataTypes = new DataType[types.length];
         for(int i=0;i<types.length;i++)
-            Dtypes[i]=DataType.getDataType(types[i]);
-        assertArrayEquals(df.getTypes(),Dtypes);
+            dataTypes[i]=DataType.getDataType(types[i]);
+        assertArrayEquals(df.getTypes(),dataTypes);
     }
 
     @Test
@@ -71,7 +71,7 @@ class TestDF {
     }
 
     @Test
-    void testiloc() {
+    void testIloc() {
         for(int i=0;i<str.length;i++) {
             DataFrame row1 = df.iloc(i);
             Assertions.assertEquals(str[i],row1.get(names[0]).get(0));
@@ -80,7 +80,8 @@ class TestDF {
         }
 
         for(int x=0;x<str.length;x++)
-            for(int y=x;y<str.length;y++){
+            for(//noinspection SuspiciousNameCombination
+                    int y=x;y<str.length;y++){
                 DataFrame rows23 = df.iloc(x,y);
                 for(int i=x, j=0;i<y;i++,j++){
                     Assertions.assertEquals(str[i],rows23.get(names[0]).get(j));
@@ -146,7 +147,7 @@ class TestDF {
     }
 
 
-    DataFrame create(String[] names,String[] types,Object[] ... arrays){
+    private DataFrame create(String[] names, String[] types, Object[]... arrays){
 
         DataFrame df = new DataFrame(names,types);
         Object[] v =new Object[types.length];

@@ -23,7 +23,7 @@ public class TestMain {
         System.out.println(df.get(new String[]{"A", "B"}, false));
         System.out.println(df.get(new String[]{"A", "B"}, true));
         System.out.println(df.get(new String[]{"A", "B"}, true) != df.get(new String[]{"A", "B"}, false));
-        df=new DataFrame("data.csv", new String[]{"float","float","float"});
+        new DataFrame("data.csv", new String[]{"float","float","float"});
         SparseDataFrame sf=new SparseDataFrame("sparse.csv", new String[]{"float","float","float"},new Object[]{0.0f,0.0f,0.0f});
         //assertEquals(df.get("a").get(0),0.0f);
         System.out.println(sf);

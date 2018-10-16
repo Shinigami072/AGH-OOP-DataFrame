@@ -28,7 +28,7 @@ public class SparseDataFrame extends DataFrame {
     }
     public class SparseKolumna extends Kolumna{
 
-        Object hidden;
+        final Object hidden;
 
         int size;
         /**
@@ -44,7 +44,7 @@ public class SparseDataFrame extends DataFrame {
         }
         /**
          * Kopiowanie
-         * @param source klumna do skopiowania
+         * @param source kolumna do skopiowania
          */
         public SparseKolumna(SparseKolumna source) {
             super(source.nazwa,source.typ);
@@ -72,9 +72,9 @@ public class SparseDataFrame extends DataFrame {
         }
 
         /**
-         * Accesor
+         * Accessor
          * @param index wiersz
-         * @return Obiekt w wierzu I
+         * @return Obiekt w wierszu I
          */
         @Override
         public Object get(int index) {
@@ -103,7 +103,7 @@ public class SparseDataFrame extends DataFrame {
 
         /**
          *
-         * @return ilość elementyów
+         * @return ilość elementów
          */
         @Override
         public int size() {
@@ -112,7 +112,7 @@ public class SparseDataFrame extends DataFrame {
 
         /**
          *
-         * @return ilość elementyów
+         * @return ilość elementów
          */
         @Override
         public Kolumna copy() {
@@ -121,17 +121,17 @@ public class SparseDataFrame extends DataFrame {
 
     }
     //true
-    public SparseDataFrame(String path,String[] typykolumn,Object[] hide) throws IOException {
-        this(path,typykolumn,hide,null);
+    public SparseDataFrame(String path,String[] typy_kolumn,Object[] hide) throws IOException {
+        this(path,typy_kolumn,hide,null);
     }
     //todo: unitTesty
 
     //false
-    public SparseDataFrame(String path,String[] typykolumn,Object[] hide,String[] nazwykolumn) throws IOException{
-        super(typykolumn.length);
-        boolean header = nazwykolumn==null;
-        for(int i=0;i<typykolumn.length;i++)
-            kolumny[i]=new SparseKolumna(header? "" : nazwykolumn[i],DataType.getDataType(typykolumn[i]),hide[i]);
+    public SparseDataFrame(String path,String[] typy_kolumn,Object[] hide,String[] nazwy_kolumn) throws IOException{
+        super(typy_kolumn.length);
+        boolean header = nazwy_kolumn==null;
+        for(int i=0;i<typy_kolumn.length;i++)
+            kolumny[i]=new SparseKolumna(header? "" : nazwy_kolumn[i],DataType.getDataType(typy_kolumn[i]),hide[i]);
         readFile(path,header);
     }
     public SparseDataFrame(String[] nazwyKolumn, DataType[] typyKolumn, Object[] hide) {
@@ -169,7 +169,7 @@ public class SparseDataFrame extends DataFrame {
     /**
      * getter kolumny o danej nazwie
      * zwraca pierwsza kolumnę o danej nazwie
-     * @param colname
+     * @param colname nazwa kolumny
      * @return kolumna
      */
     @Override
@@ -233,7 +233,6 @@ public class SparseDataFrame extends DataFrame {
         }
 
         SparseDataFrame df=new SparseDataFrame(nazwy,typy,hidden);
-        Object[] temp=new Object[kolumny.length];
 
         for(int i=from;i<=to;i++){
             df.addRecord(getRecord(i));
@@ -254,10 +253,14 @@ public class SparseDataFrame extends DataFrame {
             typy[i] = kolumny[i].typ;
         }
 
+        Object[] temp =new Object[typy.length];
         DataFrame df = new DataFrame(nazwy,typy);
         for(int i=0;i<size();i++)
         {
-            df.addRecord(getRecord(i));
+            Object[] row =getRecord(i);
+            for(int j=0;j<typy.length;j++)
+                temp[j]=typy[j].cloneData(row[j]);
+            df.addRecord(temp);
         }
         return df;
     }

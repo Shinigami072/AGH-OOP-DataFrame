@@ -11,13 +11,13 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 class TestSDF {
 
-    static SparseDataFrame df;
-    static String[] names;
-    static String[] types;
-    static String[] str;
-    static Integer[] ints;
-    static Float[] floats;
-    static Object[] hidden;
+    private static SparseDataFrame df;
+    private static String[] names;
+    private static String[] types;
+    private static String[] str;
+    private static Integer[] ints;
+    private static Float[] floats;
+    private static Object[] hidden;
 
     @BeforeAll
     static void setUp() {
@@ -61,10 +61,10 @@ class TestSDF {
                         "|D|0|1.0|\n",df.toString(),"ToString()");
 
         assertArrayEquals(df.getNames(),names);
-        DataType[] Dtypes = new DataType[types.length];
+        DataType[] dataTypes = new DataType[types.length];
         for(int i=0;i<types.length;i++)
-            Dtypes[i]=DataType.getDataType(types[i]);
-        assertArrayEquals(df.getTypes(),Dtypes);
+            dataTypes[i]=DataType.getDataType(types[i]);
+        assertArrayEquals(df.getTypes(),dataTypes);
     }
 
     @Test
@@ -83,8 +83,9 @@ class TestSDF {
         }
     }
 
+    @SuppressWarnings("SuspiciousNameCombination")
     @Test
-    void testiloc() {
+    void testIloc() {
         for(int i=0;i<str.length;i++) {
             SparseDataFrame row1 = df.iloc(i);
             Assertions.assertEquals(str[i],row1.get(names[0]).get(0));
@@ -93,7 +94,8 @@ class TestSDF {
         }
 
         for(int x=0;x<str.length;x++)
-            for(int y=x;y<str.length;y++){
+            for(//noinspection SuspiciousNameCombination
+                    int y=x;y<str.length;y++){
                 SparseDataFrame rows23 = df.iloc(x,y);
                 for(int i=x, j=0;i<y;i++,j++){
                     Assertions.assertEquals(str[i],rows23.get(names[0]).get(j));
@@ -152,9 +154,9 @@ class TestSDF {
         SparseDataFrame dfH = new SparseDataFrame("test-noH.csv",typ,hid,cols);
 
         for(int i=0;i<cols.length;i++){
-            Assertions.assertEquals(colI[i],dfF.get(cols[0]).get(i));
-            Assertions.assertEquals(colII[i],dfF.get(cols[1]).get(i));
-            Assertions.assertEquals(colIII[i],dfF.get(cols[2]).get(i));
+            Assertions.assertEquals(colI[i],dfH.get(cols[0]).get(i));
+            Assertions.assertEquals(colII[i],dfH.get(cols[1]).get(i));
+            Assertions.assertEquals(colIII[i],dfH.get(cols[2]).get(i));
         }
 
 
@@ -162,7 +164,7 @@ class TestSDF {
     }
 
 
-    static SparseDataFrame create(String[] names, String[] types ,Object[] hidden, Object[] ... arrays){
+    private static SparseDataFrame create(String[] names, String[] types, Object[] hidden, Object[]... arrays){
 
         SparseDataFrame df = new SparseDataFrame(names,types,hidden);
         Object[] v =new Object[types.length];

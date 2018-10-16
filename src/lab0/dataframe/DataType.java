@@ -7,26 +7,30 @@ public enum DataType {
     STRING("string"),
     UNKNOWN("unknown");
 
-    String id;
+    final String id;
 
     DataType(String id){
        this.id=id;
     }
 
-    public static DataType getDataType(String idetification){
+    public static DataType getDataType(String identification){
         for(DataType dt:DataType.values())
-            if(dt.id.equals(idetification))
+            if(dt.id.equals(identification))
                 return dt;
         return UNKNOWN;
     }
 
+    @SuppressWarnings({"CachedNumberConstructorCall", "BoxingBoxedValue", "RedundantStringConstructorCall"})
     public Object cloneData(Object o){//to Traci pamięć niepotrzebnie
         switch(this){
             case INT:
+                //noinspection deprecation
                 return new Integer(((Integer)o));
             case FLOAT:
+                //noinspection deprecation
                 return new Float(((Float)o));
             case DOUBLE:
+                //noinspection deprecation
                 return new Double(((Double)o));
             case STRING:
                 return new String((String)o);

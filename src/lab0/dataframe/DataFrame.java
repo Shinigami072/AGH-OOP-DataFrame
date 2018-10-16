@@ -12,9 +12,9 @@ public class DataFrame {
      * Data container
     */
     public class Kolumna{
-        ArrayList dane;
+        final ArrayList dane;
         String nazwa;
-        DataType typ;
+        final DataType typ;
 
         /**
          *
@@ -29,7 +29,7 @@ public class DataFrame {
 
         /**
          * Kopiowanie
-         * @param source klumna do skopiowania
+         * @param source kolumna do skopiowania
          */
         Kolumna(Kolumna source){
 
@@ -44,9 +44,9 @@ public class DataFrame {
 
 
         /**
-         * Accesor
+         * Accessor
          * @param index wiersz
-         * @return Obiekt w wierzu I
+         * @return Obiekt w wierszu I
          */
         public Object get(int index){
             return dane.get(index);
@@ -65,7 +65,7 @@ public class DataFrame {
 
         /**
          *
-         * @return ilość elementyów
+         * @return ilość elementów
          */
         public int size(){
             return dane.size();
@@ -75,9 +75,9 @@ public class DataFrame {
         public String toString() {
 
             StringBuilder s=new StringBuilder();
-            s.append(nazwa+" : "+typ+'\n');
+            s.append(nazwa).append(" : ").append(typ).append('\n');
             for(Object o:dane)
-                s.append(o.toString()+'\n');
+                s.append(o.toString()).append('\n');
             return s.toString();
         }
 
@@ -122,16 +122,16 @@ public class DataFrame {
     }
 
     //true
-    public DataFrame(String path,String[] typykolumn) throws IOException{
-        this(path,typykolumn,null);
+    public DataFrame(String path,String[] typy_kolumn) throws IOException{
+        this(path,typy_kolumn,null);
     }
 
     //false
-    public DataFrame(String path,String[] typykolumn,String[] nazwykolumn) throws IOException{
-        this(typykolumn.length);
-        boolean header = nazwykolumn==null;
-        for(int i=0;i<typykolumn.length;i++)
-            kolumny[i]=new Kolumna(header? "" : nazwykolumn[i],DataType.getDataType(typykolumn[i]));
+    public DataFrame(String path,String[] typy_kolumn,String[] nazwy_kolumn) throws IOException{
+        this(typy_kolumn.length);
+        boolean header = nazwy_kolumn==null;
+        for(int i=0;i<typy_kolumn.length;i++)
+            kolumny[i]=new Kolumna(header? "" : nazwy_kolumn[i],DataType.getDataType(typy_kolumn[i]));
         readFile(path,header);
     }
 
@@ -188,7 +188,7 @@ public class DataFrame {
     /**
      * getter kolumny o danej nazwie
      * zwraca pierwsza kolumnę o danej nazwie
-     * @param colname
+     * @param colname nazwa kolumny
      * @return kolumna
      */
     public Kolumna get(String colname){
@@ -222,15 +222,15 @@ public class DataFrame {
 
 
     /**
-     * Dadanie rekordu do Dataframe
+     * Dodanie rekordu do Dataframe
      * @param vals elementy rekordu
      */
     public void addRecord(Object... vals) {
         if(vals.length!=kolumny.length)
-            throw new DFException("This shoudn't happen, but i can see why could");
+            throw new DFException("This shouldn't happen, but i can see why could");
         for(int i=0;i<kolumny.length;i++)
             if(!kolumny[i].typ.isCorrectType(vals[i]))
-                throw new DFException("This shoudn't happen, but i can see why could");
+                throw new DFException("This shouldn't happen, but i can see why could");
 
         int i=0;
         rowNumber++;
@@ -287,7 +287,6 @@ public class DataFrame {
         }
 
         DataFrame df=new DataFrame(nazwy,typy);
-        Object[] temp=new Object[kolumny.length];
 
         for(int i=from;i<=to;i++){
             df.addRecord(getRecord(i));
@@ -300,11 +299,11 @@ public class DataFrame {
     public String toString() {
         StringBuilder s=new StringBuilder();
         for(Kolumna k:kolumny)
-            s.append("|"+k.nazwa+":"+k.typ.id);
+            s.append("|").append(k.nazwa).append(":").append(k.typ.id);
         s.append("|\n");
         for(int i=0;i<rowNumber;i++){
             for(Kolumna k:kolumny)
-                s.append("|"+k.get(i).toString());
+                s.append("|").append(k.get(i).toString());
             s.append("|\n");
         }
         return s.toString();

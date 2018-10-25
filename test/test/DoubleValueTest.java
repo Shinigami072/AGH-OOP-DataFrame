@@ -1,11 +1,11 @@
 package test;
 
 import lab0.dataframe.values.DoubleValue;
-import lab0.dataframe.values.IntegerValue;
 import lab0.dataframe.values.Value;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 class DoubleValueTest extends TESTValue {
@@ -19,7 +19,7 @@ class DoubleValueTest extends TESTValue {
             correct_values = new Double[count];
 
             for (int i = 0; i < count; i++) {
-                correct_values[i] = (int) (Math.random() * count - count / 2);
+                correct_values[i] = (Math.random() * count - count / 2);
                 if (i<count/2)
                     values[i] = new DoubleValue((Double) correct_values[i]);
                 else
@@ -100,7 +100,7 @@ class DoubleValueTest extends TESTValue {
         void Test_pow() {
             for (int j = 0; j < values.length; j++)
                 for (int i = 0; i < values.length; i++) {
-                    assertEquals(new DoubleValue((double) Math.pow(((Double)correct_values[i]), ((Double)correct_values[j]))), values[i].pow(values[j]));
+                    assertEquals(new DoubleValue(Math.pow(((Double) correct_values[i]), ((Double) correct_values[j]))), values[i].pow(values[j]));
                 }
         }
 
@@ -140,4 +140,4 @@ class DoubleValueTest extends TESTValue {
 
 
     }
-}
+

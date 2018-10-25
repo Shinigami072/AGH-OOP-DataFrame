@@ -1,14 +1,14 @@
 package test;
 
 import lab0.dataframe.values.DateTimeValue;
-import lab0.dataframe.values.StringValue;
 import lab0.dataframe.values.Value;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.text.Format;
 import java.time.LocalDateTime;
 import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DateTimeValueTest extends TESTValue{
 
@@ -28,7 +28,7 @@ class DateTimeValueTest extends TESTValue{
                     rand.nextInt(24),
                     rand.nextInt(60),
                     rand.nextInt(60)
-            );
+            ));
             if (i<count/2)
                 values[i] = new DateTimeValue((LocalDateTime) correct_values[i]);
             else
@@ -42,7 +42,7 @@ class DateTimeValueTest extends TESTValue{
     void Test_lte(){
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
-                assertEquals(((LocalDateTime)correct_values[i]).compareTo((LocalDateTime)correct_values[j])>=0, values[i].lte(values[j]));
+                assertEquals(((LocalDateTime) correct_values[i]).isBefore((LocalDateTime) correct_values[j]), values[i].lte(values[j]));
             }
     }
 
@@ -51,7 +51,7 @@ class DateTimeValueTest extends TESTValue{
     void Test_gte(){
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
-                assertEquals(((LocalDateTime)correct_values[i]).compareTo((LocalDateTime)correct_values[j])<=0, values[i].gte(values[j]));
+                assertEquals(((LocalDateTime) correct_values[i]).isAfter((LocalDateTime) correct_values[j]), values[i].gte(values[j]));
             }
     }
 

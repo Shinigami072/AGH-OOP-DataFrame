@@ -5,6 +5,8 @@ import lab0.dataframe.values.Value;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class StringValueTest extends TESTValue{
 
     @BeforeEach
@@ -35,12 +37,19 @@ class StringValueTest extends TESTValue{
 
     @Test
     @Override
-    void Test_lte(){
+    void Test_gte() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(((String)correct_values[i]).compareTo((String)correct_values[j])<=0, values[i].gte(values[j]));
             }
     }
 
-
+    @Test
+    @Override
+    void Test_add() {
+        for (int j = 0; j < values.length; j++)
+            for (int i = 0; i < values.length; i++) {
+                assertEquals(((String)correct_values[i] + (String)correct_values[j]), (values[i].add(values[j])).getValue());
+            }
+    }
 }

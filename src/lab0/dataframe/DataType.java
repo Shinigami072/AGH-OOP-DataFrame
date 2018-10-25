@@ -1,5 +1,5 @@
 package lab0.dataframe;
-
+@Deprecated
 public enum DataType {
     INT("int"),
     FLOAT("float"),

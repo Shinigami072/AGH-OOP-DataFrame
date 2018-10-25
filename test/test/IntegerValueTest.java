@@ -21,7 +21,10 @@ class IntegerValueTest {
 
         for (int i = 0; i < count; i++) {
             int_values[i] = (int) (Math.random() * count - count / 2);
-            values[i] = new IntegerValue(int_values[i]);
+            if (i<count/2)
+                values[i] = new IntegerValue(int_values[i]);
+            else
+                values[i]= Value.builder(IntegerValue.class).build(int_values[i].toString());
         }
     }
 

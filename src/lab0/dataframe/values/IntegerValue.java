@@ -2,13 +2,10 @@ package lab0.dataframe.values;
 
 public class IntegerValue extends NumericValue {
 
-    Integer value;
+    private Integer value;
 
-    @Override
-    public Number getNumericValue() {
-        return value;
+    IntegerValue() {
     }
-
     public IntegerValue(int i){
         value=i;
     }
@@ -33,7 +30,7 @@ public class IntegerValue extends NumericValue {
         if(! (v instanceof NumericValue))
             throw new UnsupportedOperationException();
 
-        return new IntegerValue(value+((NumericValue)v).getNumericValue().intValue());
+        return new IntegerValue(value + ((NumericValue) v).getValue().intValue());
     }
 
     @Override
@@ -41,7 +38,7 @@ public class IntegerValue extends NumericValue {
         if(! (v instanceof NumericValue))
             throw new UnsupportedOperationException();
 
-        return new IntegerValue(value-((NumericValue)v).getNumericValue().intValue());
+        return new IntegerValue(value - ((NumericValue) v).getValue().intValue());
     }
 
     @Override
@@ -49,7 +46,7 @@ public class IntegerValue extends NumericValue {
         if(! (v instanceof NumericValue))
             throw new UnsupportedOperationException();
 
-        return new IntegerValue(value*((NumericValue)v).getNumericValue().intValue());
+        return new IntegerValue(value * ((NumericValue) v).getValue().intValue());
     }
 
     @Override
@@ -57,39 +54,22 @@ public class IntegerValue extends NumericValue {
         if(! (v instanceof NumericValue))
             throw new UnsupportedOperationException();
 
-        return new IntegerValue(value/((NumericValue)v).getNumericValue().intValue());
+        return new IntegerValue(value / ((NumericValue) v).getValue().intValue());
     }
 
+    /**
+     * returns integer Value
+     *
+     * @param v is interpreted as double
+     * @return this^v
+     * @throws UnsupportedOperationException
+     */
     @Override
-    public DoubleValue pow(Value v) throws UnsupportedOperationException{
+    public IntegerValue pow(Value v) throws UnsupportedOperationException {
         if(! (v instanceof NumericValue))
             throw new UnsupportedOperationException();
 
-        return new DoubleValue(Math.pow(value,((NumericValue)v).getNumericValue().doubleValue()));    }
-
-    @Override
-    public boolean eq(Value v) throws UnsupportedOperationException{
-        if(! (v instanceof NumericValue))
-            throw new UnsupportedOperationException();
-
-        return value.equals(((NumericValue)v).getNumericValue());
+        return new IntegerValue((int) Math.pow(value, ((NumericValue) v).getValue().doubleValue()));
     }
-
-    @Override
-    public boolean lte(Value v) throws UnsupportedOperationException{
-        if(! (v instanceof NumericValue))
-            throw new UnsupportedOperationException();
-
-        return value<=((NumericValue)v).getNumericValue().intValue();
-    }
-
-    @Override
-    public boolean gte(Value v) throws UnsupportedOperationException{
-        if(! (v instanceof NumericValue))
-            throw new UnsupportedOperationException();
-
-        return value>=((NumericValue)v).getNumericValue().intValue();
-    }
-
 
 }

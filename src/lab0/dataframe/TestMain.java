@@ -1,9 +1,12 @@
 package lab0.dataframe;
 
 
-public class TestMain {
+import lab0.dataframe.values.StringValue;
+import lab0.dataframe.values.Value;
 
-    public static void main(String[] argv) throws Exception {
+class TestMain {
+
+    public static void main(String[] argv) {
 //        DataFrame df = new DataFrame(new String[]{"A", "B", "C"}, new String[]{"string", "int", "float"});
 //        System.out.println(df);
 //        df.addRecord("A", 15, 17.0f);
@@ -23,12 +26,14 @@ public class TestMain {
 //        System.out.println(df.get(new String[]{"A", "B"}, false));
 //        System.out.println(df.get(new String[]{"A", "B"}, true));
 //        System.out.println(df.get(new String[]{"A", "B"}, true) != df.get(new String[]{"A", "B"}, false));
-        DataFrame df =new DataFrame("sparse.csv", new String[]{"float","float","float"});
-        System.out.println(df.iloc(100));
-
-        SparseDataFrame sf=new SparseDataFrame(df,new Object[]{0.0f,0.0f,0.0f});//new SparseDataFrame("sparse.csv", new String[]{"float","float","float"},new Object[]{0.0f,0.0f,0.0f});
-        System.out.println(sf.iloc(100));
-
+//        DataFrame df =new DataFrame("sparse.csv", new String[]{"float","float","float"});
+//        System.out.println(df.iloc(100));
+//
+//        SparseDataFrame sf=new SparseDataFrame(df,new Object[]{0.0f,0.0f,0.0f});//new SparseDataFrame("sparse.csv", new String[]{"float","float","float"},new Object[]{0.0f,0.0f,0.0f});
+//        System.out.println(sf.iloc(100));
+        Value.ValueBuilder b1 = Value.builder(StringValue.class);
+        Value t = b1.build("TEST");
+        System.out.println((t));
         //assertEquals(df.get("a").get(0),0.0f);
 //        System.out.println(sf);
 

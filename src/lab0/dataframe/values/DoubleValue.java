@@ -1,13 +1,12 @@
 package lab0.dataframe.values;
 
 public class DoubleValue extends NumericValue {
-    Double d;
+    private Double d;
+
+    DoubleValue() {
+    }
     public DoubleValue(double value){
         d=value;
-    }
-    @Override
-    public Double getNumericValue() {
-        return d;
     }
 
     @Override
@@ -30,41 +29,38 @@ public class DoubleValue extends NumericValue {
         if(! (v instanceof NumericValue))
             throw new UnsupportedOperationException();
 
-        return new DoubleValue(d+((NumericValue)v).getNumericValue().doubleValue());
+        return new DoubleValue(d + ((NumericValue) v).getValue().doubleValue());
     }
 
     @Override
     public DoubleValue sub(Value v) {
-        return null;
+        if (!(v instanceof NumericValue))
+            throw new UnsupportedOperationException();
+
+        return new DoubleValue(d - ((NumericValue) v).getValue().doubleValue());
     }
 
     @Override
     public DoubleValue mul(Value v) {
-        return null;
+        if (!(v instanceof NumericValue))
+            throw new UnsupportedOperationException();
+
+        return new DoubleValue(d * ((NumericValue) v).getValue().doubleValue());
     }
 
     @Override
     public DoubleValue div(Value v) {
-        return null;
+        if (!(v instanceof NumericValue))
+            throw new UnsupportedOperationException();
+
+        return new DoubleValue(d / ((NumericValue) v).getValue().doubleValue());
     }
 
     @Override
     public DoubleValue pow(Value v) {
-        return null;
-    }
+        if (!(v instanceof NumericValue))
+            throw new UnsupportedOperationException();
 
-    @Override
-    public boolean eq(Value v) {
-        return false;
-    }
-
-    @Override
-    public boolean lte(Value v) {
-        return false;
-    }
-
-    @Override
-    public boolean gte(Value v) {
-        return false;
+        return new DoubleValue(Math.pow(d, ((NumericValue) v).getValue().doubleValue()));
     }
 }

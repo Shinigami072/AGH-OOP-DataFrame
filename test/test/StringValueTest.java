@@ -3,6 +3,7 @@ package test;
 import lab0.dataframe.values.StringValue;
 import lab0.dataframe.values.Value;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class StringValueTest extends TESTValue{
 
@@ -14,12 +15,31 @@ class StringValueTest extends TESTValue{
         correct_values = new String[count];
 
         for (int i = 0; i < count; i++) {
-            correct_values[i] = "ABCDEFRTHSWHTRWE"+i+"AVBREEDGEBTRagr".charAt(i%15);
+            correct_values[i] = "ABCDEFRTHSWHTRWE"+Integer.toString(i)+("AVBREEDGEBTRagr".charAt(i%15));
             if (i<count/2)
                 values[i] = new StringValue((String) correct_values[i]);
             else
                 values[i]= Value.builder(StringValue.class).build(correct_values[i].toString());
         }
+    }
+
+
+    @Test
+    @Override
+    void Test_lte(){
+        for (int j = 0; j < values.length; j++)
+            for (int i = 0; i < values.length; i++) {
+                assertEquals(((String)correct_values[i]).compareTo((String)correct_values[j])>=0, values[i].lte(values[j]));
+            }
+    }
+
+    @Test
+    @Override
+    void Test_lte(){
+        for (int j = 0; j < values.length; j++)
+            for (int i = 0; i < values.length; i++) {
+                assertEquals(((String)correct_values[i]).compareTo((String)correct_values[j])<=0, values[i].gte(values[j]));
+            }
     }
 
 

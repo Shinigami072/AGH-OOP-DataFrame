@@ -3,7 +3,7 @@ package lab0.dataframe.values;
 
 import java.lang.reflect.InvocationTargetException;
 
-public abstract class Value implements Cloneable {
+public abstract class Value<T> implements Cloneable {
 
     public static ValueBuilder builder(Class<? extends Value> c) {
         return new ValueBuilder(c);
@@ -18,7 +18,6 @@ public abstract class Value implements Cloneable {
 
     /**
      * toString
-     *
      * @return String Representation
      */
     public abstract String toString();

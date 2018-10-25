@@ -24,6 +24,13 @@ public class DoubleValue extends NumericValue {
         return new DoubleValue(Double.parseDouble(s));
     }
 
+    /**
+     * Works only on numeric types,
+     * the result of addition is cast to an double
+     * @param v Value to add
+     * @return DoubleValue containing result
+     * @throws UnsupportedOperationException
+     */
     @Override
     public DoubleValue add(Value v) {
         if(! (v instanceof NumericValue))
@@ -32,6 +39,13 @@ public class DoubleValue extends NumericValue {
         return new DoubleValue(d + ((NumericValue) v).getValue().doubleValue());
     }
 
+    /**
+     * Works only on numeric types,
+     * the result of subtraction is cast to an double
+     * @param v Value to add
+     * @return DoubleValue containing result
+     * @throws UnsupportedOperationException
+     */
     @Override
     public DoubleValue sub(Value v) {
         if (!(v instanceof NumericValue))
@@ -40,6 +54,13 @@ public class DoubleValue extends NumericValue {
         return new DoubleValue(d - ((NumericValue) v).getValue().doubleValue());
     }
 
+    /**
+     * Works only on numeric types,
+     * the result of multiplication is cast to an double
+     * @param v Value to add
+     * @return DoubleValue containing result
+     * @throws UnsupportedOperationException
+     */
     @Override
     public DoubleValue mul(Value v) {
         if (!(v instanceof NumericValue))
@@ -48,6 +69,13 @@ public class DoubleValue extends NumericValue {
         return new DoubleValue(d * ((NumericValue) v).getValue().doubleValue());
     }
 
+    /**
+     * Works only on numeric types,
+     * the result of division is cast to an double
+     * @param v Value to add
+     * @return DoubleValue containing result
+     * @throws UnsupportedOperationException
+     */
     @Override
     public DoubleValue div(Value v) {
         if (!(v instanceof NumericValue))
@@ -56,6 +84,13 @@ public class DoubleValue extends NumericValue {
         return new DoubleValue(d / ((NumericValue) v).getValue().doubleValue());
     }
 
+    /**
+     * Works only on numeric types,
+     * the result of this to the power of argument is cast to an double
+     * @param v Value to add
+     * @return DoubleValue containing result
+     * @throws UnsupportedOperationException
+     */
     @Override
     public DoubleValue pow(Value v) {
         if (!(v instanceof NumericValue))

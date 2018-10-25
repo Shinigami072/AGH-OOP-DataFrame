@@ -4,7 +4,6 @@ public abstract class NumericValue extends Value{
 
     abstract public Number getValue();
 
-
     /**
      * Comparison uses !eq
      *

@@ -18,6 +18,7 @@ public class IntegerValue extends NumericValue {
     @Override
     public String toString() {
         return value.toString();
+
     }
 
     @Override
@@ -25,6 +26,13 @@ public class IntegerValue extends NumericValue {
         return new IntegerValue(Integer.parseInt(s));
     }
 
+    /**
+     * Works only on numeric types,
+     * the result of addition is cast to an int
+     * @param v Value to add
+     * @return IntegerValueconteining result
+     * @throws UnsupportedOperationException
+     */
     @Override
     public IntegerValue add(Value v) throws UnsupportedOperationException{
         if(! (v instanceof NumericValue))
@@ -33,6 +41,13 @@ public class IntegerValue extends NumericValue {
         return new IntegerValue(value + ((NumericValue) v).getValue().intValue());
     }
 
+    /**
+     * Works only on numeric types,
+     * the result of subtraction is cast to an int
+     * @param v Value to add
+     * @return IntegerValueconteining result
+     * @throws UnsupportedOperationException
+     */
     @Override
     public IntegerValue sub(Value v) throws UnsupportedOperationException{
         if(! (v instanceof NumericValue))
@@ -41,6 +56,13 @@ public class IntegerValue extends NumericValue {
         return new IntegerValue(value - ((NumericValue) v).getValue().intValue());
     }
 
+    /**
+     * Works only on numeric types,
+     * the result of multiplication is cast to an int
+     * @param v Value to add
+     * @return IntegerValueconteining result
+     * @throws UnsupportedOperationException
+     */
     @Override
     public IntegerValue mul(Value v) throws UnsupportedOperationException{
         if(! (v instanceof NumericValue))
@@ -49,6 +71,13 @@ public class IntegerValue extends NumericValue {
         return new IntegerValue(value * ((NumericValue) v).getValue().intValue());
     }
 
+    /**
+     * Works only on numeric types,
+     * the result of divison is cast to an int
+     * @param v Value to add
+     * @return IntegerValueconteining result
+     * @throws UnsupportedOperationException
+     */
     @Override
     public IntegerValue div(Value v) throws UnsupportedOperationException{
         if(! (v instanceof NumericValue))

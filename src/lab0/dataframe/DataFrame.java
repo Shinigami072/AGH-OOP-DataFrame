@@ -1,13 +1,14 @@
 package lab0.dataframe;
 
+import lab0.dataframe.groupby.Applyable;
+import lab0.dataframe.groupby.GroupBy;
 import lab0.dataframe.values.Value;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class DataFrame {
     /**
@@ -89,6 +90,10 @@ public class DataFrame {
 
         public Kolumna copy(){
             return new Kolumna(this);
+        }
+
+        public int uniqueSize() {
+            return size();
         }
     }
 
@@ -294,6 +299,89 @@ public class DataFrame {
         }
 
         return df;
+    }
+
+    public Hashtable<Value, DataFrame> groupBy(String colname){
+        Kolumna kol  =get(colname);
+        Hashtable<Value, DataFrame> output = new Hashtable<>(kol.uniqueSize());
+
+        for (int i = 0; i < rowNumber; i++) {
+            Value key=kol.get(i);
+            Value[] row = getRecord(i);
+            DataFrame ll = output.get(key);
+
+            if(ll!= null)
+               ll.addRecord(row);
+
+            else{
+                ll  =new SparseDataFrame(getNames(),getTypes(),row);
+                ll.addRecord(row);
+                output.put(key,ll);
+            }
+        }
+        return output;
+    }
+
+    public Grupator4000 groupBy(String[] colname){
+        Hashtable<Value,DataFrame> initial =  groupBy(colname[0]);
+
+        LinkedList<DataFrame> lista;
+
+        if(colname.length ==1)
+            lista = new LinkedList<>(initial.values());
+        else
+            lista= new LinkedList<>();
+
+        LinkedList<DataFrame> temp= new LinkedList<>(initial.values());
+
+        for (int i = 1; i < colname.length; i++) {
+            lista.clear();
+            for(DataFrame df:temp)
+                lista.addAll(df.groupBy(colname[i]).values());
+            temp.clear();
+            temp.addAll(lista);
+        }
+
+        return new Grupator4000(lista);
+
+    }
+
+    final class Grupator4000 implements GroupBy {
+
+        private LinkedList<DataFrame> groups;
+
+        public Grupator4000(Collection<DataFrame> collection){
+            groups = new LinkedList<>(collection);
+        }
+
+        public LinkedList<DataFrame> getGroups() {
+            return groups;
+        }
+
+        @Override
+        public DataFrame apply(Applyable function) {
+
+            DataFrame output =null;
+
+            for(DataFrame df:groups){
+
+                DataFrame temp = function.apply(df);
+
+                if(output == null){
+                    output=temp;
+                }
+                else{
+                    int size  =temp.size();
+                    for (int i = 0; i <size ; i++) {
+                        output.addRecord(temp.getRecord(i));
+                    }
+                }
+
+            }
+
+            return output;
+
+        }
     }
 
     @Override

@@ -153,4 +153,12 @@ public class DateTimeValue extends Value {
     }
 
 
+    @Override
+    public DateTimeValue clone() throws CloneNotSupportedException {
+        DateTimeValue dt = (DateTimeValue) super.clone();
+        dt.val=LocalDateTime.from(val);
+        return dt;
+    }
+
+
 }

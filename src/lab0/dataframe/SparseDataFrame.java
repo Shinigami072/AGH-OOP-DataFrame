@@ -167,6 +167,11 @@ public class SparseDataFrame extends DataFrame {
             return size;
         }
 
+        @Override
+        public int uniqueSize() {
+            return dane.size();
+        }
+
         /**
          *
          * @return kopia kolumny

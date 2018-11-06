@@ -95,6 +95,10 @@ public class DataFrame {
         public int uniqueSize() {
             return size();
         }
+
+        public Class<? extends Value> getType() {
+            return typ;
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -225,7 +229,9 @@ public class DataFrame {
         return new DataFrame(kolumny);
     }
 
-
+    public int colCount() {
+        return kolumny.length;
+    }
 
     /**
      * Dodanie rekordu do DataFrame
@@ -342,16 +348,51 @@ public class DataFrame {
             temp.addAll(lista);
         }
 
-        return new Grupator4000(lista);
+        return new Grupator4000(lista,colname);
 
     }
 
     final class Grupator4000 implements GroupBy {
 
         private LinkedList<DataFrame> groups;
+        private String[]   id_colnames;
+        private String[] data_colnames;
 
-        public Grupator4000(Collection<DataFrame> collection){
+        private Kolumna[] id_columns;
+
+
+        public Grupator4000(Collection<DataFrame> collection,String[] colnames){
             groups = new LinkedList<>(collection);
+            id_colnames=colnames;
+            id_columns= new Kolumna[colnames.length];
+
+            String[] all_colnames = groups.getFirst().getNames();
+            data_colnames= new String[all_colnames.length-id_colnames.length];
+
+            int j =0;
+            outer:
+            for (String colname : all_colnames) {
+
+                for (String id : id_colnames)
+                    if (colname.equals(id))
+                        continue outer;
+
+                j++;
+                data_colnames[j] = colname;
+            }
+
+            for(int i=0;i<colnames.length;i++) {
+                Kolumna temp = groups.getFirst().get(colnames[i]);
+                id_columns[i] = new Kolumna(temp.nazwa,temp.typ);
+
+            }
+
+            for(DataFrame df : groups)
+            {
+                for(int i=0;i<id_colnames.length;i++)
+                    id_columns[i].add(df.get(id_colnames[i]).get(0));
+            }
+
         }
 
         public LinkedList<DataFrame> getGroups() {
@@ -363,26 +404,64 @@ public class DataFrame {
 
             DataFrame output =null;
 
-            for(DataFrame df:groups){
+            for (int group = 0; group < groups.size(); group++) {
 
-                DataFrame temp = function.apply(df);
 
+                DataFrame temp = function.apply(groups.get(group).get(data_colnames,false));
+
+                //inicjalizacja DataFrame output
+                //tak żeby zawierał otpowiednie typy kolunm na wyjściu
                 if(output == null){
-                    output=temp;
+                    String[]   temp_colnames = temp.getNames();
+                    String[] output_colnames = new String[temp_colnames.length+id_colnames.length];
+                    Class<? extends Value>[]   temp_types = temp.getTypes();
+                    Class<? extends Value>[] output_types = new Class[temp_colnames.length+id_colnames.length];
+
+                    for (int i = 0; i < output_colnames.length; i++) {
+                        output_colnames[i]= (i<id_colnames.length) ?
+                                id_colnames[i] :
+                                temp_colnames[i-id_colnames.length];
+
+                        output_types[i]=(i<id_colnames.length) ?
+                                id_columns[i].getType():
+                                temp_types[i-id_colnames.length];
+                    }
+
+                    output = new DataFrame(output_colnames,output_types);
                 }
-                else{
-                    int size  =temp.size();
-                    for (int i = 0; i <size ; i++) {
-                        output.addRecord(temp.getRecord(i));
+
+
+                //przepisanie wartości z temp, jeżelicoś zawiera
+                if(temp.size()>0)
+                {
+
+                    Value[] output_row = new Value[output.colCount()];
+                    //wpisanie identyfykatora wiersza
+                    for (int i = 0; i < id_columns.length; i++) {
+                        output_row[i]=id_columns[i].get(group);
+                    }
+
+                    //przepisanie wartości z temp
+                    for (int i = 0; i < temp.size(); i++) {
+                        Value[] temp_row=temp.getRecord(i);
+                        for(int j=id_columns.length;j<output.colCount();j++)
+                            output_row[j]=temp_row[j-id_columns.length];
+
+
+                        output.addRecord(output_row);
                     }
                 }
 
             }
 
+
             return output;
 
         }
-    }
+
+
+
+}
 
     @Override
     public String toString() {

@@ -5,8 +5,7 @@ import lab0.dataframe.values.DoubleValue;
 import lab0.dataframe.values.NumericValue;
 import lab0.dataframe.values.Value;
 
-public class MeanVariable implements Applyable{
-
+public class MeanApplyable implements Applyable{
 
     @Override
     public DataFrame apply(DataFrame df) {
@@ -21,7 +20,7 @@ public class MeanVariable implements Applyable{
                 DataFrame.Kolumna k = df.get(names[kolumna]);
 
                 try{
-                if(vals[kolumna] instanceof NumericValue){
+                if(NumericValue.class.isAssignableFrom(k.getType())){
 
                     for (int i = 1; i < size; i++) {
                         Value row = k.get(i);

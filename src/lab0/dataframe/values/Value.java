@@ -34,55 +34,55 @@ public abstract class Value<T> implements Cloneable {
      *
      * @return create new Value adding the two calues together
      */
-    public abstract Value add(Value v);
+    public abstract Value add(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
      * @return create new Value subtracting the two calues together
      */
-    public abstract Value sub(Value v);
+    public abstract Value sub(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
      * @return create new Value multiplying the two calues together
      */
-    public abstract Value mul(Value v);
+    public abstract Value mul(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
      * @return create new Value dic=viding the two calues together
      */
-    public abstract Value div(Value v);
+    public abstract Value div(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
      * @return create new Value being current Value to the power of the other
      */
-    public abstract Value pow(Value v);
+    public abstract Value pow(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
      * @return return if both values are equal, if vaLues are not of same type always false
      */
-    public abstract boolean eq(Value v);
+    public abstract boolean eq(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
      * @return return if both values are less or  equal
      */
-    public abstract boolean lte(Value v);
+    public abstract boolean lte(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
      * @return return if both values are greater or  equal
      */
-    public abstract boolean gte(Value v);
+    public abstract boolean gte(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
      * @return return if both values are not  equal
      */
-    public abstract boolean neq(Value v);
+    public abstract boolean neq(Value v) throws UnsupportedOperationException;
 
     public boolean equals(Object other) {
         if (!(other instanceof Value))

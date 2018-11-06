@@ -4,10 +4,11 @@ import lab0.dataframe.values.StringValue;
 import lab0.dataframe.values.Value;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import testDeps.TESTValue;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class StringValueTest extends TESTValue{
+class StringValueTest extends TESTValue {
 
     @BeforeEach
     void setUp() {
@@ -28,7 +29,7 @@ class StringValueTest extends TESTValue{
 
     @Test
     @Override
-    void Test_lte(){
+    public void Test_lte(){
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(((String)correct_values[i]).compareTo((String)correct_values[j])>=0, values[i].lte(values[j]));
@@ -37,7 +38,7 @@ class StringValueTest extends TESTValue{
 
     @Test
     @Override
-    void Test_gte() {
+    public void Test_gte() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(((String)correct_values[i]).compareTo((String)correct_values[j])<=0, values[i].gte(values[j]));
@@ -46,7 +47,7 @@ class StringValueTest extends TESTValue{
 
     @Test
     @Override
-    void Test_add() {
+    public void Test_add() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(((String)correct_values[i] + (String)correct_values[j]), (values[i].add(values[j])).getValue());

@@ -4,13 +4,14 @@ import lab0.dataframe.values.DateTimeValue;
 import lab0.dataframe.values.Value;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import testDeps.TESTValue;
 
 import java.time.LocalDateTime;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class DateTimeValueTest extends TESTValue{
+public class DateTimeValueTest extends TESTValue {
 
     @BeforeEach
     void setUp() {
@@ -39,7 +40,7 @@ class DateTimeValueTest extends TESTValue{
 
     @Test
     @Override
-    void Test_lte(){
+    public void  Test_lte(){
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(((LocalDateTime) correct_values[i]).isBefore((LocalDateTime) correct_values[j]), values[i].lte(values[j]));
@@ -48,7 +49,7 @@ class DateTimeValueTest extends TESTValue{
 
     @Test
     @Override
-    void Test_gte(){
+    public void Test_gte(){
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(((LocalDateTime) correct_values[i]).isAfter((LocalDateTime) correct_values[j]), values[i].gte(values[j]));

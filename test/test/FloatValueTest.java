@@ -9,7 +9,7 @@ import testDeps.TESTValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-class DoubleValueTest extends TESTValue {
+class FloatValueTest extends TESTValue {
 
 
         @BeforeEach

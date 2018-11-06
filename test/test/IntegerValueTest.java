@@ -4,6 +4,7 @@ import lab0.dataframe.values.IntegerValue;
 import lab0.dataframe.values.Value;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import testDeps.TESTValue;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -80,7 +81,7 @@ class IntegerValueTest extends TESTValue {
 //    }
 //
     @Test
-    void Test_lte() {
+    public void Test_lte() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(((Integer)correct_values[i]) <= ((Integer)correct_values[j]), values[i].lte(values[j]));
@@ -88,7 +89,7 @@ class IntegerValueTest extends TESTValue {
     }
 
     @Test
-    void Test_gte() {
+    public void Test_gte() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(((Integer)correct_values[i]) >= ((Integer)correct_values[j]), values[i].gte(values[j]));
@@ -96,7 +97,7 @@ class IntegerValueTest extends TESTValue {
     }
 
     @Test
-    void Test_pow() {
+    public void Test_pow() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(new IntegerValue((int) Math.pow(((Integer)correct_values[i]), ((Integer)correct_values[j]))), values[i].pow(values[j]));
@@ -105,7 +106,7 @@ class IntegerValueTest extends TESTValue {
 
 
     @Test
-    void Test_add() {
+    public void Test_add() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(new IntegerValue((((Integer)correct_values[i]) + ((Integer)correct_values[j]))), values[i].add(values[j]));
@@ -113,7 +114,7 @@ class IntegerValueTest extends TESTValue {
     }
 
     @Test
-    void Test_sub() {
+    public void Test_sub() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(new IntegerValue((((Integer)correct_values[i]) - ((Integer)correct_values[j]))), values[i].sub(values[j]));
@@ -121,7 +122,7 @@ class IntegerValueTest extends TESTValue {
     }
 
     @Test
-    void Test_mul() {
+    public void Test_mul() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 assertEquals(new IntegerValue((((Integer)correct_values[i]) * ((Integer)correct_values[j]))), values[i].mul(values[j]));
@@ -129,7 +130,7 @@ class IntegerValueTest extends TESTValue {
     }
 
     @Test
-    void Test_div() {
+    public void Test_div() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
                 if ((Integer)correct_values[j] != 0)

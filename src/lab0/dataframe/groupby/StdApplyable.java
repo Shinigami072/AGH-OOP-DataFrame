@@ -3,6 +3,7 @@ package lab0.dataframe.groupby;
 import lab0.dataframe.DataFrame;
 import lab0.dataframe.values.DoubleValue;
 import lab0.dataframe.values.NumericValue;
+import lab0.dataframe.values.Value;
 
 public class StdApplyable implements Applyable {
     @Override
@@ -10,11 +11,11 @@ public class StdApplyable implements Applyable {
         Applyable varianceMaker = new VarApplyable();
         DataFrame var= varianceMaker.apply(df);
         DataFrame output= new DataFrame(var.getNames(),var.getTypes());
-
+        DoubleValue sqrt = new DoubleValue(0.5);
         if(df.size()>0){
-           NumericValue[] row = (NumericValue[] )var.getRecord(0);
+           Value[] row = var.getRecord(0);
             for (int i = 0; i < row.length; i++) {
-                row[i]= new DoubleValue(Math.sqrt(row[i].getValue().doubleValue()));
+                row[i]= (row[i].pow(sqrt));
             }
             output.addRecord(row);
         }

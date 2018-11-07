@@ -26,7 +26,7 @@ public class SumApplyable implements Applyable {
         }
 
 
-        DataFrame output = new DataFrame((String[])colnames.toArray(),( Class<? extends Value>[] )types.toArray());
+        DataFrame output = new DataFrame(colnames.toArray(new String[0]),types.toArray(new Class[0]));
         String[] output_colnames = output.getNames();
         Value[] row = new Value[output.colCount()];
 
@@ -39,6 +39,7 @@ public class SumApplyable implements Applyable {
                 for (int i = 1; i < size; i++) {
                     row[col] = row[col].add(k.get(i));
                 }
+                col++;
             }
             output.addRecord(row);
         }

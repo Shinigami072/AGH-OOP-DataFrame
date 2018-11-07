@@ -91,7 +91,7 @@ public class StringValue extends Value {
      */
     @Override
     public boolean lte(Value v) {
-        return val.compareTo(v.toString())>=0;
+        return val.compareTo(v.toString())<=0;
     }
 
     /**compares albhabetically using to sting method
@@ -99,7 +99,7 @@ public class StringValue extends Value {
      */
     @Override
     public boolean gte(Value v) {
-        return val.compareTo(v.toString())<=0;
+        return val.compareTo(v.toString())>=0;
 
     }
 

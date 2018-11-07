@@ -20,7 +20,9 @@ public abstract class Value<T> implements Cloneable {
      * toString
      * @return String Representation
      */
-    public abstract String toString();
+    public String toString(){
+        return getValue().toString();
+    }
 
     /**
      * create

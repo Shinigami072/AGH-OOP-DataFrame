@@ -10,6 +10,11 @@ public class DateTimeValue extends Value {
     }
 
     private DateTimeValue(String value) {
+
+        if(!value.contains("T")){
+            value= String.format("%sT00:00:00", value);
+        }
+
         val = LocalDateTime.parse(value);
     }
 
@@ -50,6 +55,9 @@ public class DateTimeValue extends Value {
 
     @Override
     public DateTimeValue create(String value) {
+        if(!value.contains("T")){
+            value= String.format("%sT00:00:00", value);
+        }
         return new DateTimeValue(value);
     }
 

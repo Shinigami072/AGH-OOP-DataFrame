@@ -82,9 +82,12 @@ public class DataFrame {
         public String toString() {
 
             StringBuilder s=new StringBuilder();
-            s.append(nazwa).append(" : ").append(typ.toGenericString()).append('\n');
-            for(Value o:dane)
-                s.append(o.toString()).append('\n');
+            String[] str=typ.getTypeName().split("\\.");
+            s.append(String.format("|%-14.14s:%15.15s",nazwa ,str[str.length-1]));
+            s.append("|\n");
+            for(int i=0;i<rowNumber;i++){
+                s.append(String.format("|%30.30s|\n",get(i).toString()));
+            }
             return s.toString();
         }
 
@@ -307,48 +310,107 @@ public class DataFrame {
         return df;
     }
 
-    public Hashtable<Value, DataFrame> groupBy(String colname){
-        Kolumna kol  =get(colname);
-        Hashtable<Value, DataFrame> output = new Hashtable<>(kol.uniqueSize());
+//    public Hashtable<Value, DataFrame> groupBy(String colname){
+//        Kolumna kol  =get(colname);
+//        Hashtable<Value, DataFrame> output = new Hashtable<>(kol.uniqueSize());
+//
+//        for (int i = 0; i < rowNumber; i++) {
+//            Value key=kol.get(i);
+//            Value[] row = getRecord(i);
+//            DataFrame ll = output.get(key);
+//
+//            if(ll!= null)
+//               ll.addRecord(row);
+//
+//            else{
+//                ll  =new SparseDataFrame(getNames(),getTypes(),row);
+//                ll.addRecord(row);
+//                output.put(key,ll);
+//            }
+//        }
+//        return output;
+//    }
+//
+//    public Grupator4000 groupBy(String[] colname){
+//        Hashtable<Value,DataFrame> initial =  groupBy(colname[0]);
+//
+//        LinkedList<DataFrame> lista;
+//
+//        if(colname.length ==1)
+//            lista = new LinkedList<>(initial.values());
+//        else
+//            lista= new LinkedList<>();
+//
+//        LinkedList<DataFrame> temp= new LinkedList<>(initial.values());
+//
+//        for (int i = 1; i < colname.length; i++) {
+//            lista.clear();
+//            for(DataFrame df:temp)
+//                lista.addAll(df.groupBy(colname[i]).values());
+//            temp.clear();
+//            temp.addAll(lista);
+//        }
+//
+//        return new Grupator4000(lista,colname);
+//
+//    }
 
-        for (int i = 0; i < rowNumber; i++) {
-            Value key=kol.get(i);
-            Value[] row = getRecord(i);
-            DataFrame ll = output.get(key);
+    public Grupator4000 groupBy(String... colname){
 
-            if(ll!= null)
-               ll.addRecord(row);
+        class ValueGroup implements Comparable<ValueGroup>{
+            private Value[] id;
+            ValueGroup(Value[] key){
+                id=key;
+            }
 
-            else{
-                ll  =new SparseDataFrame(getNames(),getTypes(),row);
-                ll.addRecord(row);
-                output.put(key,ll);
+            @Override
+            public boolean equals(Object o) {
+                if(o instanceof ValueGroup)
+                {
+                    ValueGroup other=(ValueGroup)o;
+                    if(id.length!= other.id.length)
+                        return false;
+                    return Arrays.deepEquals(id,other.id);
+                }
+                else
+                    return false;
+            }
+
+            @Override
+            public int hashCode() {
+
+                return Arrays.hashCode(id);
+            }
+
+            @Override
+            public int compareTo(ValueGroup valueGroup) {
+                for (int i = 0; i < id.length; i++) {
+                    if(id[i].equals(valueGroup.id[i]))
+                        continue;
+                    if(id[i].lte(valueGroup.id[i]))
+                        return -1;
+                    else
+                        return 1;
+                }
+                return 0;
             }
         }
-        return output;
-    }
 
-    public Grupator4000 groupBy(String[] colname){
-        Hashtable<Value,DataFrame> initial =  groupBy(colname[0]);
 
-        LinkedList<DataFrame> lista;
+        Hashtable<ValueGroup,DataFrame> storage =  new Hashtable<>();
+        DataFrame keys = get(colname,false);
 
-        if(colname.length ==1)
-            lista = new LinkedList<>(initial.values());
-        else
-            lista= new LinkedList<>();
-
-        LinkedList<DataFrame> temp= new LinkedList<>(initial.values());
-
-        for (int i = 1; i < colname.length; i++) {
-            lista.clear();
-            for(DataFrame df:temp)
-                lista.addAll(df.groupBy(colname[i]).values());
-            temp.clear();
-            temp.addAll(lista);
+        for (int i = 0; i < size(); i++) {
+            ValueGroup key = new ValueGroup(keys.getRecord(i));
+            DataFrame group = storage.get(key);
+            if(group == null){
+                group = new SparseDataFrame(getNames(),getTypes(),getRecord(i));
+                storage.put(key,group);
+            }
+            group.addRecord(getRecord(i));
         }
 
-        return new Grupator4000(lista,colname);
+        return new Grupator4000(new TreeMap<>(storage).values(),colname);
 
     }
 
@@ -377,8 +439,8 @@ public class DataFrame {
                     if (colname.equals(id))
                         continue outer;
 
-                j++;
                 data_colnames[j] = colname;
+                j++;
             }
 
             for(int i=0;i<colnames.length;i++) {
@@ -469,12 +531,12 @@ public class DataFrame {
         String[] str;
         for(Kolumna k:kolumny){
             str=k.typ.getTypeName().split("\\.");
-            s.append("|").append(k.nazwa).append(":").append(str[str.length-1]);
+            s.append(String.format("|%-14.14s:%15.15s",k.nazwa ,str[str.length-1]));
         }
         s.append("|\n");
         for(int i=0;i<rowNumber;i++){
             for(Kolumna k:kolumny)
-                s.append("|").append(k.get(i).toString());
+                s.append(String.format("|%30.30s",k.get(i).toString()));
             s.append("|\n");
         }
         return s.toString();

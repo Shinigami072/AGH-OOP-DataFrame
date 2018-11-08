@@ -23,7 +23,7 @@ public class IntegerValue extends NumericValue {
 
     @Override
     public IntegerValue create(String s) {
-        return new IntegerValue(Integer.parseInt(s));
+        return new IntegerValue(Integer.parseInt(s.trim()));
     }
 
     /**

@@ -189,8 +189,11 @@ public class DataFrame {
 
 
     protected DataFrame(int count){
+        if(count==0)
+            throw new DFException("this shouldn't happen");
         kolumny=new Kolumna[count];
         rowNumber=0;
+
     }
     public DataFrame(String[] nazwyKolumn,Class<? extends Value>[] typyKolumn){
         this(nazwyKolumn.length);
@@ -200,6 +203,8 @@ public class DataFrame {
 
 
     public DataFrame(Kolumna[] kolumny){
+        if(kolumny.length==0)
+            throw new DFException("this shouldn't happen");
         this.kolumny=kolumny;
         rowNumber=kolumny[0].size();
         for(Kolumna k:kolumny)

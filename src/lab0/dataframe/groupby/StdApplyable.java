@@ -10,10 +10,11 @@ public class StdApplyable implements Applyable {
     public DataFrame apply(DataFrame df) {
         Applyable varianceMaker = new VarApplyable();
         DataFrame var= varianceMaker.apply(df);
+
         DataFrame output= new DataFrame(var.getNames(),var.getTypes());
-        DoubleValue sqrt = new DoubleValue(0.5);
         if(df.size()>0){
-           Value[] row = var.getRecord(0);
+            DoubleValue sqrt = new DoubleValue(0.5);
+            Value[] row = var.getRecord(0);
             for (int i = 0; i < row.length; i++) {
                 row[i]= (row[i].pow(sqrt));
             }

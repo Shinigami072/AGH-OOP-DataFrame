@@ -44,22 +44,22 @@ class TestSDF {
     void testToString() {
         System.out.println("To String");
         Assertions.assertEquals(
-                "|A:StringValue|B:IntegerValue|C:FloatValue|\n" +
-                        "|A|15|17.0|\n" +
-                        "|B|5|1.0|\n" +
-                        "|C|4|7.0|\n" +
-                        "|D|5|7.5|\n" +
-                        "|A|0|1.0|\n" +
-                        "|A|0|17.0|\n" +
-                        "|A|0|1.0|\n" +
-                        "|A|0|7.0|\n" +
-                        "|A|0|7.5|\n" +
-                        "|A|0|1.0|\n" +
-                        "|A|0|17.0|\n" +
-                        "|A|0|1.0|\n" +
-                        "|A|0|7.0|\n" +
-                        "|A|0|7.5|\n" +
-                        "|D|0|1.0|\n",df.toString(),"ToString()");
+                "|A             :    StringValue|B             :   IntegerValue|C             :     FloatValue|\n" +
+                        "|                             A|                            15|                          17.0|\n" +
+                        "|                             B|                             5|                           1.0|\n" +
+                        "|                             C|                             4|                           7.0|\n" +
+                        "|                             D|                             5|                           7.5|\n" +
+                        "|                             A|                             0|                           1.0|\n" +
+                        "|                             A|                             0|                          17.0|\n" +
+                        "|                             A|                             0|                           1.0|\n" +
+                        "|                             A|                             0|                           7.0|\n" +
+                        "|                             A|                             0|                           7.5|\n" +
+                        "|                             A|                             0|                           1.0|\n" +
+                        "|                             A|                             0|                          17.0|\n" +
+                        "|                             A|                             0|                           1.0|\n" +
+                        "|                             A|                             0|                           7.0|\n" +
+                        "|                             A|                             0|                           7.5|\n" +
+                        "|                             D|                             0|                           1.0|\n",df.toString(),"ToString()");
 
         assertArrayEquals(df.getNames(),names);
         assertArrayEquals(df.getTypes(),types);
@@ -107,6 +107,8 @@ class TestSDF {
     void testShallowCopy() {
         SparseDataFrame a1 = df.get(new String[]{names[0],names[1]},false);
         SparseDataFrame b1 = df.get(new String[]{names[0],names[1]},false);
+        assertEquals(b1,a1);
+        assertEquals(a1,b1);
         for(int i=0;i<str.length;i++)
         {
             assertSame(a1.get(names[0]).get(i),b1.get(names[0]).get(i));
@@ -118,6 +120,8 @@ class TestSDF {
     void testDeepCopy(){
         SparseDataFrame a2 = df.get(new String[]{names[0],names[1]},true);
         SparseDataFrame b2 = df.get(new String[]{names[0],names[1]},true);
+        assertEquals(a2,b2);
+        assertEquals(b2,a2);
         assertNotSame(a2,b2);
         for(int i=0;i<str.length;i++)
         {
@@ -140,7 +144,7 @@ class TestSDF {
         DoubleValue[] colII = {new DoubleValue(0.5),new DoubleValue(0.4),new DoubleValue(0.3),new DoubleValue(0.2),new DoubleValue(0.1),new DoubleValue(0.0)};
         StringValue[] colIII = {new StringValue("A"),new StringValue("B"),new StringValue("C"),new StringValue("D"),new StringValue("E"),new StringValue("F")};
 
-        SparseDataFrame dfF = new SparseDataFrame("test.csv",types,hid);
+        SparseDataFrame dfF = new SparseDataFrame("test/testData/test.csv",types,hid);
 
         for(int i=0;i<cols.length;i++){
             Assertions.assertEquals(colI[i],dfF.get(cols[0]).get(i));
@@ -149,7 +153,7 @@ class TestSDF {
         }
 
 
-        SparseDataFrame dfH = new SparseDataFrame("test-noH.csv",types,hid,cols);
+        SparseDataFrame dfH = new SparseDataFrame("test/testData/test-noH.csv",types,hid,cols);
 
         for(int i=0;i<cols.length;i++){
             Assertions.assertEquals(colI[i],dfH.get(cols[0]).get(i));

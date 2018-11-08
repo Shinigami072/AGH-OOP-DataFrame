@@ -27,6 +27,8 @@ public class SumApplyable implements Applyable {
 
 
         DataFrame output = new DataFrame(colnames.toArray(new String[0]),types.toArray(new Class[0]));
+        //https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+        //possible aqquarcy gain
         String[] output_colnames = output.getNames();
         Value[] row = new Value[output.colCount()];
 

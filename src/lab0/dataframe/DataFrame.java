@@ -99,6 +99,34 @@ public class DataFrame {
             return size();
         }
 
+        @Override
+        public int hashCode() {
+            int hash = 0;
+            for (int i = 0; i < size(); i++) {
+                hash+=get(i).hashCode();
+            }
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if(obj instanceof Kolumna) {
+                Kolumna k = (Kolumna)obj;
+
+                if(k.size()!=size())
+                    return false;
+
+                for (int i = 0; i < size(); i++) {
+                    if(!k.get(i).eq(get(i))){
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            return false;
+        }
+
         public Class<? extends Value> getType() {
             return typ;
         }
@@ -414,7 +442,7 @@ public class DataFrame {
 
     }
 
-    final class Grupator4000 implements GroupBy {
+    public final class Grupator4000 implements GroupBy {
 
         private LinkedList<DataFrame> groups;
         private String[]   id_colnames;
@@ -524,6 +552,21 @@ public class DataFrame {
 
 
 }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof DataFrame)
+        {
+            DataFrame df = (DataFrame)obj;
+            return Arrays.deepEquals(kolumny,df.kolumny);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(kolumny);
+    }
 
     @Override
     public String toString() {

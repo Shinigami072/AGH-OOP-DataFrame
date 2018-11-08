@@ -13,7 +13,7 @@ class IntegerValueTest extends TESTValue {
 
     @BeforeEach
     void setUp() {
-        int count = 20000;
+        int count = 2000;
 
         values = new Value[count];
         correct_values = new Integer[count];

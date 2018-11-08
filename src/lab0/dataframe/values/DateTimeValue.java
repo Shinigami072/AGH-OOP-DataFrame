@@ -9,10 +9,12 @@ public class DateTimeValue extends Value {
     DateTimeValue() {
     }
 
-    private DateTimeValue(String value) {
-
-        if(!value.contains("T")){
-            value= String.format("%sT00:00:00", value);
+    public DateTimeValue(String value) {
+        if(value.length()>16 || Character.isWhitespace(value.charAt(0)) || Character.isWhitespace(value.charAt(value.length()-1)))
+            value=value.trim();
+        if(value.length()<16){
+//            value= String.format("%sT00:00:00", value);
+            value+="T00:00:00";
         }
 
         val = LocalDateTime.parse(value);
@@ -55,9 +57,7 @@ public class DateTimeValue extends Value {
 
     @Override
     public DateTimeValue create(String value) {
-        if(!value.contains("T")){
-            value= String.format("%sT00:00:00", value);
-        }
+
         return new DateTimeValue(value);
     }
 

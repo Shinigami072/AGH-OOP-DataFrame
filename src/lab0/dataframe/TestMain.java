@@ -37,12 +37,15 @@ class TestMain {
         System.out.println((t));
         //assertEquals(df.get("a").get(0),0.0f);
 //        System.out.println(sf);
-        DataFrame multi = new DataFrame("groubymulti.csv",new Class[]{StringValue.class, DateTimeValue.class,DoubleValue.class,DoubleValue.class});
-//        System.out.println(multi);
-        DataFrame.Grupator4000 group = multi.groupBy("id","date");
-//        System.out.println(group.min());
-        System.out.println(group.std());
+        for (int i = 0; i < 3; i++) {
 
+
+            DataFrame multi = new DataFrame("test/testData/multi/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, DoubleValue.class});
+//        System.out.println(multi);
+            DataFrame.Grupator4000 group = multi.groupBy("id", "date");
+//        System.out.println(group.min());
+            System.out.println(group.std());
+        }
 //        System.out.println(group.var());
 //        System.out.println(group.std());
 

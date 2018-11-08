@@ -41,11 +41,11 @@ class TestDF {
     void testToString() {
         System.out.println("To String");
         Assertions.assertEquals(
-                "|A:StringValue|B:IntegerValue|C:FloatValue|\n" +
-                        "|A|15|17.0|\n" +
-                        "|B|5|1.0|\n" +
-                        "|C|4|7.0|\n" +
-                        "|D|5|7.5|\n",df.toString(),"ToString()");
+                "|A             :    StringValue|B             :   IntegerValue|C             :     FloatValue|\n" +
+                        "|                             A|                            15|                          17.0|\n" +
+                        "|                             B|                             5|                           1.0|\n" +
+                        "|                             C|                             4|                           7.0|\n" +
+                        "|                             D|                             5|                           7.5|\n",df.toString(),"ToString()");
 
         assertArrayEquals(df.getNames(),names);
         assertArrayEquals(df.getTypes(),types);
@@ -92,6 +92,8 @@ class TestDF {
     void testShallowCopy() {
         DataFrame a1 = df.get(new String[]{names[0],names[1]},false);
         DataFrame b1 = df.get(new String[]{names[0],names[1]},false);
+        assertEquals(b1,a1);
+        assertEquals(a1,b1);
         for(int i=0;i<str.length;i++)
         {
             assertSame(a1.get(names[0]).get(i),b1.get(names[0]).get(i));
@@ -104,6 +106,8 @@ class TestDF {
         DataFrame a2 = df.get(new String[]{names[0],names[1]},true);
         DataFrame b2 = df.get(new String[]{names[0],names[1]},true);
         assertNotSame(a2,b2);
+        assertEquals(b2,a2);
+        assertEquals(a2,b2);
         for(int i=0;i<str.length;i++)
         {
             System.out.println(names[0]+i);
@@ -122,7 +126,7 @@ class TestDF {
         DoubleValue[] colII = {new DoubleValue(0.5),new DoubleValue(0.4),new DoubleValue(0.3),new DoubleValue(0.2),new DoubleValue(0.1),new DoubleValue(0.0)};
         StringValue[] colIII = {new StringValue("A"),new StringValue("B"),new StringValue("C"),new StringValue("D"),new StringValue("E"),new StringValue("F")};
 
-        DataFrame dfF = new DataFrame("test.csv",types);
+        DataFrame dfF = new DataFrame("test/testData/test.csv",types);
 
         for(int i=0;i<cols.length;i++){
             Assertions.assertEquals(colI[i],dfF.get(cols[0]).get(i));
@@ -131,7 +135,7 @@ class TestDF {
         }
 
 
-        DataFrame dfH = new DataFrame("test-noH.csv",types,cols);
+        DataFrame dfH = new DataFrame("test/testData/test-noH.csv",types,cols);
 
         for(int i=0;i<cols.length;i++){
             Assertions.assertEquals(colI[i],dfH.get(cols[0]).get(i));

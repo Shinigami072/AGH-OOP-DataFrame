@@ -12,7 +12,7 @@ class StringValueTest extends TESTValue {
 
     @BeforeEach
     void setUp() {
-        int count = 10000;
+        int count = 1000;
 
         values = new Value[count];
         correct_values = new String[count];
@@ -32,7 +32,7 @@ class StringValueTest extends TESTValue {
     public void Test_lte(){
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
-                assertEquals(((String)correct_values[i]).compareTo((String)correct_values[j])>=0, values[i].lte(values[j]));
+                assertEquals(((String)correct_values[i]).compareTo((String)correct_values[j])<=0, values[i].lte(values[j]));
             }
     }
 
@@ -41,7 +41,7 @@ class StringValueTest extends TESTValue {
     public void Test_gte() {
         for (int j = 0; j < values.length; j++)
             for (int i = 0; i < values.length; i++) {
-                assertEquals(((String)correct_values[i]).compareTo((String)correct_values[j])<=0, values[i].gte(values[j]));
+                assertEquals(((String)correct_values[i]).compareTo((String)correct_values[j])>=0, values[i].gte(values[j]));
             }
     }
 

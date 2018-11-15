@@ -4,6 +4,30 @@ package lab0.dataframe.values;
 import java.lang.reflect.InvocationTargetException;
 
 public abstract class Value<T> implements Cloneable {
+    public Value operate(OPERATION_TYPES operation, Value operand) {
+        switch (operation) {
+            case ADD:
+                return add(operand);
+            case SUB:
+                return sub(operand);
+            case MUL:
+                return mul(operand);
+            case DIV:
+                return div(operand);
+            case POW:
+                return pow(operand);
+        }
+
+        throw new UnsupportedOperationException();
+    }
+
+    public enum OPERATION_TYPES {
+        ADD,
+        SUB,
+        MUL,
+        DIV,
+        POW
+    }
 
     public static ValueBuilder builder(Class<? extends Value> c) {
         return new ValueBuilder(c);

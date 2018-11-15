@@ -1,6 +1,8 @@
 package lab0.dataframe.groupby;
 
 import lab0.dataframe.DataFrame;
+import lab0.dataframe.exceptions.DFApplyableException;
+import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.Value;
 
 import java.util.HashSet;
@@ -8,11 +10,11 @@ import java.util.HashSet;
 public class MaxApplyable implements Applyable {
 
     @Override
-    public DataFrame apply(DataFrame df) {
+    public DataFrame apply(DataFrame df) throws DFApplyableException {
         DataFrame output = new DataFrame(df.getNames(), df.getTypes());
 
         HashSet<Integer> bannedColumns = new HashSet<>();
-
+        try {
         int size = df.size();
         if (size > 0) {
             Value[] max = df.getRecord(0);
@@ -38,7 +40,7 @@ public class MaxApplyable implements Applyable {
         }
 
         if (bannedColumns.size() == output.colCount())
-            throw new RuntimeException("Really?1");
+            throw new DFApplyableException("no comparable Columns in Dataframe");
 
         String[] output_colnames = output.getNames();
         String[] colnames = new String[output.colCount() - bannedColumns.size()];
@@ -48,6 +50,12 @@ public class MaxApplyable implements Applyable {
                 colnames[j++] = output_colnames[i];
         }
 
-        return output.get(colnames, false);
+            return output.get(colnames, false);
+
+        } catch (DFColumnTypeException | CloneNotSupportedException e) {
+            throw new DFApplyableException(e.getMessage());//todo: Applyable Type error
+        }
+
+
     }
 }

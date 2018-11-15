@@ -83,6 +83,9 @@ public class IntegerValue extends NumericValue {
         if(! (v instanceof NumericValue))
             throw new UnsupportedOperationException();
 
+        if (((NumericValue) v).getValue().intValue() == 0)
+            throw new ArithmeticException("divided by 0");
+
         return new IntegerValue(value / ((NumericValue) v).getValue().intValue());
     }
 

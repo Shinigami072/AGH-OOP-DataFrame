@@ -81,6 +81,9 @@ public class FloatValue extends NumericValue {
         if (!(v instanceof NumericValue))
             throw new UnsupportedOperationException();
 
+        if (((NumericValue) v).getValue().floatValue() == 0.0f)
+            throw new ArithmeticException("divided by 0");
+
         return new FloatValue(value / ((NumericValue) v).getValue().floatValue());
     }
 

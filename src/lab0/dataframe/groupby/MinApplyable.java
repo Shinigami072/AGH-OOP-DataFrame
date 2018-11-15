@@ -1,6 +1,8 @@
 package lab0.dataframe.groupby;
 
 import lab0.dataframe.DataFrame;
+import lab0.dataframe.exceptions.DFApplyableException;
+import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.Value;
 
 import java.util.HashSet;
@@ -10,46 +12,52 @@ import java.util.SortedSet;
 public class MinApplyable implements Applyable {
 
     @Override
-    public DataFrame apply(DataFrame df) {
-        DataFrame output = new DataFrame(df.getNames(), df.getTypes());
+    public DataFrame apply(DataFrame df) throws DFApplyableException {
+        try {
 
-        HashSet<Integer> bannedColumns = new HashSet<>();
+            DataFrame output = new DataFrame(df.getNames(), df.getTypes());
 
-        int size = df.size();
-        if (size > 0) {
-            Value[] min = df.getRecord(0);
+            HashSet<Integer> bannedColumns = new HashSet<>();
 
-            for (int i = 1; i < size; i++) {
-                Value[] row = df.getRecord(i);
+            int size = df.size();
+            if (size > 0) {
+                Value[] min = df.getRecord(0);
 
-                for (int kolumna = 0; kolumna < min.length; kolumna++) {
+                for (int i = 1; i < size; i++) {
+                    Value[] row = df.getRecord(i);
 
-                    if (bannedColumns.contains(kolumna))
-                        continue;
+                    for (int kolumna = 0; kolumna < min.length; kolumna++) {
 
-                    try {
-                        if (row[kolumna].lte(min[kolumna]))
-                            min[kolumna] = row[kolumna];
-                    } catch (UnsupportedOperationException ignored) {
-                        bannedColumns.add(kolumna);
+                        if (bannedColumns.contains(kolumna))
+                            continue;
+
+                        try {
+                            if (row[kolumna].lte(min[kolumna]))
+                                min[kolumna] = row[kolumna];
+                        } catch (UnsupportedOperationException ignored) {
+                            bannedColumns.add(kolumna);
+                        }
                     }
+
                 }
-
+                output.addRecord(min);
             }
-            output.addRecord(min);
+
+            if (bannedColumns.size() == output.colCount())
+                throw new RuntimeException("Really?1");
+
+            String[] output_colnames = output.getNames();
+            String[] colnames = new String[output.colCount() - bannedColumns.size()];
+
+            for (int i = 0, j = 0; i < output_colnames.length; i++) {
+                if (!bannedColumns.contains(i))
+                    colnames[j++] = output_colnames[i];
+            }
+
+            return output.get(colnames, false);
+
+        } catch (DFColumnTypeException | CloneNotSupportedException e) {
+            throw new DFApplyableException(e.getMessage());
         }
-
-        if (bannedColumns.size() == output.colCount())
-            throw new RuntimeException("Really?1");
-
-        String[] output_colnames = output.getNames();
-        String[] colnames = new String[output.colCount() - bannedColumns.size()];
-
-        for (int i = 0, j = 0; i < output_colnames.length; i++) {
-            if (!bannedColumns.contains(i))
-                colnames[j++] = output_colnames[i];
-        }
-
-        return output.get(colnames, false);
     }
 }

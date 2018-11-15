@@ -81,6 +81,9 @@ public class DoubleValue extends NumericValue {
         if (!(v instanceof NumericValue))
             throw new UnsupportedOperationException();
 
+        if (((NumericValue) v).getValue().doubleValue() == 0.0)
+            throw new ArithmeticException("divided by 0");
+
         return new DoubleValue(d / ((NumericValue) v).getValue().doubleValue());
     }
 

@@ -44,9 +44,6 @@ public abstract class NumericValue extends Value{
 
     /**
      * Comparison, as if both values were double
-
-
-
      */
     @Override
     public boolean lte(Value v) {

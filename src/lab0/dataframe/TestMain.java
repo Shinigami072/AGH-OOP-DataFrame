@@ -1,13 +1,15 @@
 package lab0.dataframe;
 
 
+import lab0.dataframe.exceptions.DFApplyableException;
+import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.*;
 
 import java.io.IOException;
 
 class TestMain {
 
-    public static void main(String[] argv) throws IOException {
+    public static void main(String[] argv) throws IOException, DFColumnTypeException, DFApplyableException, CloneNotSupportedException {
         DataFrame df = new DataFrame(new String[]{"A", "B", "C"}, new Class[]{StringValue.class, IntegerValue.class, FloatValue.class});
         System.out.println(df);
         df.addRecord(new StringValue("A"), new IntegerValue(15),new FloatValue( 17.0f));

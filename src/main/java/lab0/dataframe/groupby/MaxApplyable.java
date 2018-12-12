@@ -39,11 +39,11 @@ public class MaxApplyable implements Applyable {
             output.addRecord(max);
         }
 
-        if (bannedColumns.size() == output.colCount())
+            if (bannedColumns.size() == output.getColCount())
             throw new DFApplyableException("no comparable Columns in Dataframe");
 
         String[] output_colnames = output.getNames();
-        String[] colnames = new String[output.colCount() - bannedColumns.size()];
+            String[] colnames = new String[output.getColCount() - bannedColumns.size()];
 
         for (int i = 0, j = 0; i < output_colnames.length; i++) {
             if (!bannedColumns.contains(i))

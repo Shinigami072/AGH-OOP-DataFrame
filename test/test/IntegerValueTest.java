@@ -53,7 +53,7 @@ class IntegerValueTest extends TESTValue {
 //    @Test
 //    void Test_getValue() {
 //        for (int i = 0; i < values.length; i++) {
-//            assertEquals(int_values[i], values[i].getValue());
+//            assertEquals(int_values[i], values[i].getValueType());
 //        }
 //    }
 //

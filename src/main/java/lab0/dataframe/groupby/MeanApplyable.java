@@ -16,8 +16,8 @@ public class MeanApplyable implements Applyable{
             DataFrame sum= (new SumApplyable()).apply(df);
 
 
-            Class<DoubleValue>[] types = new Class[sum.colCount()];
-            for (int i = 0; i < sum.colCount(); i++) {
+            Class<DoubleValue>[] types = new Class[sum.getColCount()];
+            for (int i = 0; i < sum.getColCount(); i++) {
                 types[i]=DoubleValue.class;
             }
             DataFrame output = new DataFrame(sum.getNames(),types);
@@ -26,7 +26,7 @@ public class MeanApplyable implements Applyable{
             //if size == 0 it returns an empty Dataframe
             int size = df.size();
             if(size>0){
-                DoubleValue[] vals = new DoubleValue[output.colCount()];
+                DoubleValue[] vals = new DoubleValue[output.getColCount()];
                 Value[] sums = sum.getRecord(0);
                 DoubleValue divider = new DoubleValue(size);
                 for (int kolumna = 0; kolumna <vals.length ; kolumna++) {

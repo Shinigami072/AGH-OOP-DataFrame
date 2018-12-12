@@ -1,7 +1,10 @@
 package lab0.dataframe.values;
 
 
+import lab0.dataframe.exceptions.DFValueBuildException;
+
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 
 public abstract class Value<T> implements Cloneable {
     public Value operate(OPERATION_TYPES operation, Value operand) {
@@ -29,8 +32,18 @@ public abstract class Value<T> implements Cloneable {
         POW
     }
 
+    private static HashMap<Class<? extends Value>, ValueBuilder> factories;
     public static ValueBuilder builder(Class<? extends Value> c) {
-        return new ValueBuilder(c);
+
+        if (factories == null)
+            factories = new HashMap<>();
+
+        ValueBuilder f = factories.get(c);
+        if (f == null) {
+            f = new ValueBuilder(c);
+            factories.put(c, f);
+        }
+        return f;
     }
 
     /**
@@ -128,18 +141,26 @@ public abstract class Value<T> implements Cloneable {
 
     public static class ValueBuilder {
         Class<? extends Value> typ;
+        Value val;
 
         ValueBuilder(Class<? extends Value> c) {
             typ = c;
-        }
-
-        public Value build(String data) {
             try {
-                return (Value) typ.getMethod("create", String.class).invoke(typ.newInstance(), data);
-            } catch (IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchMethodException e) {
+                val = typ.newInstance();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
-            throw new RuntimeException();
+        }
+
+        public Value build(String data) throws DFValueBuildException {
+            try {
+                return val.create(data);
+            } catch (Exception e) {
+                throw new DFValueBuildException("parseError: \"" + data + "\" into " + typ.getSimpleName() + " : " + e.getMessage());
+
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package test;
 
 import lab0.dataframe.DataFrame;
+import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +20,7 @@ class TestDF {
     private FloatValue[]  floats;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws DFColumnTypeException {
         System.out.println("Test Setup");
         String[] names = {"A","B","C"};
         Class<? extends Value>[] types = new Class[]{StringValue.class, IntegerValue.class, FloatValue.class};
@@ -68,7 +69,7 @@ class TestDF {
     }
 
     @Test
-    void testIloc() {
+    void testIloc() throws DFColumnTypeException {
         for(int i=0;i<str.length;i++) {
             DataFrame row1 = df.iloc(i);
             Assertions.assertEquals(str[i],row1.get(names[0]).get(0));
@@ -89,7 +90,7 @@ class TestDF {
     }
 
     @Test
-    void testShallowCopy() {
+    void testShallowCopy() throws DFColumnTypeException, CloneNotSupportedException {
         DataFrame a1 = df.get(new String[]{names[0],names[1]},false);
         DataFrame b1 = df.get(new String[]{names[0],names[1]},false);
         assertEquals(b1,a1);
@@ -102,7 +103,7 @@ class TestDF {
     }
 
     @Test
-    void testDeepCopy(){
+    void testDeepCopy() throws DFColumnTypeException, CloneNotSupportedException {
         DataFrame a2 = df.get(new String[]{names[0],names[1]},true);
         DataFrame b2 = df.get(new String[]{names[0],names[1]},true);
         assertNotSame(a2,b2);
@@ -119,7 +120,7 @@ class TestDF {
     }
 
     @Test
-    void testLoad() throws IOException{
+    void testLoad() throws IOException, DFColumnTypeException {
         String[] cols={"id","do","str"};
         Class<? extends Value>[] types = new Class[]{IntegerValue.class, DoubleValue.class, StringValue.class};
         IntegerValue[] colI = {new IntegerValue(0),new IntegerValue(1),new IntegerValue(2),new IntegerValue(3),new IntegerValue(4),new IntegerValue(5)};
@@ -148,7 +149,7 @@ class TestDF {
     }
 
 
-    private DataFrame create(String[] names,  Class<? extends Value>[] types, Value[]... arrays){
+    private DataFrame create(String[] names,  Class<? extends Value>[] types, Value[]... arrays) throws DFColumnTypeException {
 
         DataFrame df = new DataFrame(names,types);
         Value[] v =new Value[types.length];

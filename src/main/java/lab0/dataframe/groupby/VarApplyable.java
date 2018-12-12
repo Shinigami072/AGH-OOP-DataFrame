@@ -27,7 +27,7 @@ public class VarApplyable implements Applyable {
 
                 DoubleValue sq = new DoubleValue(2.0);
 
-                Value[] variance = new Value[mean.colCount()];
+                Value[] variance = new Value[mean.getColCount()];
 
                 for (int i = 0; i < sizedDown.size(); i++) {
                     Value[] data = sizedDown.getRecord(i);
@@ -55,7 +55,7 @@ public class VarApplyable implements Applyable {
 
             } else if (df.size() == 1) {
 
-                Value[] variance = new Value[mean.colCount()];
+                Value[] variance = new Value[mean.getColCount()];
                 for (int i = 0; i < variance.length; i++) {
                     variance[i] = new DoubleValue(0.0);
                 }

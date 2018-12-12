@@ -3,6 +3,8 @@ package test;
 import lab0.dataframe.DataFrame;
 import lab0.dataframe.DataFrame.Grupator4000;
 import lab0.dataframe.SparseDataFrame;
+import lab0.dataframe.exceptions.DFApplyableException;
+import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static sun.misc.Version.print;
 
 public class GroupbyTest {
     static DataFrame frameiddate;
@@ -20,10 +21,14 @@ public class GroupbyTest {
     @BeforeAll
     static void setUp() {
         try {
-            frameiddate = new SparseDataFrame("test/testData/multi/groupby.csv",new Class[]{StringValue.class,DateTimeValue.class,DoubleValue.class,DoubleValue.class},new Value[]{new StringValue("a"),new DateTimeValue("1985-02-04"),new DoubleValue(0.3935550074650053),new DoubleValue(-979.0616718111498)});
-            frameid = new SparseDataFrame("test/testData/single/groupby.csv",new Class[]{StringValue.class,DateTimeValue.class,DoubleValue.class,DoubleValue.class},new Value[]{new StringValue("a"),new DateTimeValue("1985-02-04"),new DoubleValue(0.3935550074650053),new DoubleValue(-979.0616718111498)});
+            frameiddate = new SparseDataFrame("test/testData/multi/groupby.csv",new Value[]{new StringValue("a"),new DateTimeValue("1985-02-04"),new DoubleValue(0.3935550074650053),new DoubleValue(-979.0616718111498)});
+            frameid = new SparseDataFrame("test/testData/single/groupby.csv",new Value[]{new StringValue("a"),new DateTimeValue("1985-02-04"),new DoubleValue(0.3935550074650053),new DoubleValue(-979.0616718111498)});
+            System.out.println("multi:"+frameiddate.size());
+            System.out.println("single:"+frameid.size());
             multidata = new DataFrame("test/testData/groupedData.csv",new Class[]{StringValue.class,StringValue.class,IntegerValue.class,DoubleValue.class, FloatValue.class,DateTimeValue.class,});
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (DFColumnTypeException e) {
             e.printStackTrace();
         }
     }
@@ -34,7 +39,7 @@ public class GroupbyTest {
     Grupator4000 multidataidstring;
     Grupator4000 multidataidint;
     @BeforeEach
-    void setGrupby() {
+    void setGrupby() throws DFColumnTypeException, CloneNotSupportedException {
         grupbyid = frameid.groupBy("id");
         grupbyiddate = frameiddate.groupBy("id","date");
         multidataid = multidata.groupBy("id");
@@ -55,6 +60,10 @@ public class GroupbyTest {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (DFColumnTypeException e) {
+            e.printStackTrace();
+        } catch (DFApplyableException e) {
+            e.printStackTrace();
         }
     }
 
@@ -71,6 +80,10 @@ public class GroupbyTest {
             System.out.println(multidataidint.mean());
 
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (DFColumnTypeException e) {
+            e.printStackTrace();
+        } catch (DFApplyableException e) {
             e.printStackTrace();
         }
     }
@@ -89,6 +102,10 @@ public class GroupbyTest {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (DFColumnTypeException e) {
+            e.printStackTrace();
+        } catch (DFApplyableException e) {
+            e.printStackTrace();
         }
     }
 
@@ -105,6 +122,10 @@ public class GroupbyTest {
             System.out.println(multidataidint.std());
 
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (DFColumnTypeException e) {
+            e.printStackTrace();
+        } catch (DFApplyableException e) {
             e.printStackTrace();
         }
     }
@@ -123,6 +144,10 @@ public class GroupbyTest {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (DFColumnTypeException e) {
+            e.printStackTrace();
+        } catch (DFApplyableException e) {
+            e.printStackTrace();
         }
     }
 
@@ -139,6 +164,10 @@ public class GroupbyTest {
             System.out.println(multidataidint.max());
 
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (DFColumnTypeException e) {
+            e.printStackTrace();
+        } catch (DFApplyableException e) {
             e.printStackTrace();
         }
     }

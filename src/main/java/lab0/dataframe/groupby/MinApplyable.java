@@ -6,8 +6,6 @@ import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.Value;
 
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.SortedSet;
 
 public class MinApplyable implements Applyable {
 
@@ -43,11 +41,11 @@ public class MinApplyable implements Applyable {
                 output.addRecord(min);
             }
 
-            if (bannedColumns.size() == output.colCount())
+            if (bannedColumns.size() == output.getColCount())
                 throw new RuntimeException("Really?1");
 
             String[] output_colnames = output.getNames();
-            String[] colnames = new String[output.colCount() - bannedColumns.size()];
+            String[] colnames = new String[output.getColCount() - bannedColumns.size()];
 
             for (int i = 0, j = 0; i < output_colnames.length; i++) {
                 if (!bannedColumns.contains(i))

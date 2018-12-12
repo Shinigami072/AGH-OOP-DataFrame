@@ -32,13 +32,13 @@ public class SumApplyable implements Applyable {
             //https://en.wikipedia.org/wiki/Kahan_summation_algorithm
             //possible aqquarcy gain
             String[] output_colnames = output.getNames();
-            Value[] row = new Value[output.colCount()];
+            Value[] row = new Value[output.getColCount()];
 
             int size = df.size();
             if (size > 0) {
                 int col = 0;
                 for (String colname : output_colnames) {
-                    DataFrame.Kolumna k = df.get(colname);
+                    DataFrame.Column k = df.get(colname);
                     row[col] = k.get(0);
                     for (int i = 1; i < size; i++) {
                         row[col] = row[col].add(k.get(i));

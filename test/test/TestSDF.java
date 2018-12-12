@@ -1,6 +1,7 @@
 package test;
 
 import lab0.dataframe.SparseDataFrame;
+import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,7 @@ class TestSDF {
 
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws DFColumnTypeException {
         System.out.println("Test Setup");
         String[] names1 = {"A","B","C"};
         Class<? extends Value>[] types1 = new Class[]{StringValue.class, IntegerValue.class, FloatValue.class};
@@ -136,7 +137,7 @@ class TestSDF {
     }
 
     @Test
-    void testLoad() throws IOException{
+    void testLoad() throws IOException, DFColumnTypeException {
         Value[] hid={new IntegerValue(0),new DoubleValue(0.5),new StringValue("A")};
         String[] cols={"id","do","str"};
         Class<? extends Value>[] types = new Class[]{IntegerValue.class, DoubleValue.class, StringValue.class};
@@ -144,7 +145,7 @@ class TestSDF {
         DoubleValue[] colII = {new DoubleValue(0.5),new DoubleValue(0.4),new DoubleValue(0.3),new DoubleValue(0.2),new DoubleValue(0.1),new DoubleValue(0.0)};
         StringValue[] colIII = {new StringValue("A"),new StringValue("B"),new StringValue("C"),new StringValue("D"),new StringValue("E"),new StringValue("F")};
 
-        SparseDataFrame dfF = new SparseDataFrame("test/testData/test.csv",types,hid);
+        SparseDataFrame dfF = new SparseDataFrame("test/testData/test.csv", hid);
 
         for(int i=0;i<cols.length;i++){
             Assertions.assertEquals(colI[i],dfF.get(cols[0]).get(i));
@@ -153,7 +154,7 @@ class TestSDF {
         }
 
 
-        SparseDataFrame dfH = new SparseDataFrame("test/testData/test-noH.csv",types,hid,cols);
+        SparseDataFrame dfH = new SparseDataFrame("test/testData/test-noH.csv",hid,cols);
 
         for(int i=0;i<cols.length;i++){
             Assertions.assertEquals(colI[i],dfH.get(cols[0]).get(i));
@@ -166,9 +167,9 @@ class TestSDF {
     }
 
 
-    private static SparseDataFrame create(String[] names,  Class<? extends Value>[] types, Value[] hidden, Value[]... arrays){
+    private static SparseDataFrame create(String[] names,  Class<? extends Value>[] types, Value[] hidden, Value[]... arrays) throws DFColumnTypeException {
 
-        SparseDataFrame df = new SparseDataFrame(names,types,hidden);
+        SparseDataFrame df = new SparseDataFrame(names, hidden);
         Value[] v =new Value[types.length];
         for(int i=0;i<arrays[0].length;i++) {
             for (int j = 0; j < types.length; j++)

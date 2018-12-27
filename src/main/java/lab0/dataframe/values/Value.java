@@ -32,6 +32,7 @@ public abstract class Value<T> implements Cloneable {
         POW
     }
 
+    //Lazy loading Factories
     private static HashMap<Class<? extends Value>, ValueBuilder> factories;
     public static ValueBuilder builder(Class<? extends Value> c) {
 
@@ -140,16 +141,14 @@ public abstract class Value<T> implements Cloneable {
     }
 
     public static class ValueBuilder {
-        Class<? extends Value> typ;
+        final Class<? extends Value> typ;
         Value val;
 
         ValueBuilder(Class<? extends Value> c) {
             typ = c;
             try {
-                val = typ.newInstance();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
+                val = typ.getDeclaredConstructor().newInstance();
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         }

@@ -4,7 +4,6 @@ import lab0.dataframe.DataFrame;
 import lab0.dataframe.exceptions.DFApplyableException;
 import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.DoubleValue;
-import lab0.dataframe.values.NumericValue;
 import lab0.dataframe.values.Value;
 
 public class StdApplyable implements Applyable {

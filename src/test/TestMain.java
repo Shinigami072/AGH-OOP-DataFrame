@@ -4,12 +4,12 @@ import lab0.dataframe.exceptions.DFApplyableException;
 import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.exceptions.DFValueBuildException;
 import lab0.dataframe.groupby.GroupBy;
-import lab0.dataframe.values.*;
+import lab0.dataframe.values.IntegerValue;
+import lab0.dataframe.values.StringValue;
 
-import javax.sound.midi.Soundbank;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Random;
 
 class TestMain {
@@ -28,8 +28,33 @@ class TestMain {
 //        for(int i=0;i<db.size();i++){
 //        System.out.println(Arrays.toString(db.getRecord(i)));
 //        }
-        final int N = 7;
+        final int N = 10;
         Random r = new Random();
+        db.setAutoCommit(false);
+        for (int i = 0; i < N; i++) {
+            db.addRecord(new IntegerValue(db.size() + 1), new StringValue("TEST"), new StringValue("AFG"), new StringValue("TEST"), new IntegerValue(0));
+        }
+        db.setAutoCommit(true);
+        db.setAutoCommit(false);
+        DataFrame.Column c = db.get("CountryCode");
+        System.out.println(c.size());
+        System.out.println(c.uniqueSize());
+        System.out.println(c);
+        System.out.println(c.get(0));
+        System.out.println(db);
+        System.out.println(Arrays.toString(db.getRecord(r.nextInt(db.size()))));
+        long cur = System.currentTimeMillis();
+        for (int i = 0; i < N; i++) {
+            int a = r.nextInt(db.size());
+            int b = r.nextInt(db.size());
+            db.iloc(Math.min(a, b), Math.max(a, b));
+
+        }
+        String[] cols = db.getNames();
+        for (int i = 0; i < N; i++) {
+            db.get(new String[]{cols[r.nextInt(cols.length)], cols[r.nextInt(cols.length)]}, false);
+        }
+        System.out.println(System.currentTimeMillis() - cur);
         System.out.println("DB start");
 
         long mean1 = System.currentTimeMillis();
@@ -39,6 +64,7 @@ class TestMain {
         }
         mean1 = System.currentTimeMillis() - mean1;
         System.out.println("DB finished");
+        db.setAutoCommit(true);
 
         DataFrame db_ = db.toDataFrame();
         long mean2 = System.currentTimeMillis();

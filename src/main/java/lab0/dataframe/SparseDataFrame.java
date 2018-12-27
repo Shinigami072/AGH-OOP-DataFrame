@@ -20,29 +20,25 @@ public class SparseDataFrame extends DataFrame {
         super(hide.length);
         boolean header = nazwy_kolumn == null;
         for (int i = 0; i < hide.length; i++)
-            kolumny[i] = new SparseColumn(header ? "" : nazwy_kolumn[i], hide[i]);
+            columns[i] = new SparseColumn(header ? "" : nazwy_kolumn[i], hide[i]);
         readFile(path, header);
     }
 
     public SparseDataFrame(String[] nazwyKolumn, Value[] hide) {
         super(nazwyKolumn.length);
         for (int i = 0; i < hide.length; i++)
-            kolumny[i] = new SparseColumn(nazwyKolumn[i], hide[i]);
+            columns[i] = new SparseColumn(nazwyKolumn[i], hide[i]);
     }
 
     public SparseDataFrame(DataFrame df, Value[] hide) {
-        super(df.kolumny.length);
+        super(df.columns.length);
         String[] nazwyKolumn = df.getNames();
         for (int i = 0; i < hide.length; i++)
-            kolumny[i] = new SparseColumn(nazwyKolumn[i], hide[i]);
+            columns[i] = new SparseColumn(nazwyKolumn[i], hide[i]);
 
         try {
-            Value[] temp = new Value[df.kolumny.length];
             for (int i = 0; i < df.rowNumber; i++) {
-                int j = 0;
-                for (Column k : df.kolumny)
-                    temp[j++] = k.get(i);
-                addRecord(temp);
+                addRecord(df.getRecord(i));
             }
 
         } catch (DFColumnTypeException e) {
@@ -55,10 +51,10 @@ public class SparseDataFrame extends DataFrame {
     }
 
     /**
-     * getter kolumny o danej nazwie
+     * getter columns o danej nazwie
      * zwraca pierwsza kolumnę o danej nazwie
      *
-     * @param colname nazwa kolumny
+     * @param colname nazwa columns
      * @return kolumna
      */
     @Override
@@ -91,6 +87,7 @@ public class SparseDataFrame extends DataFrame {
      *
      * @param i nr wiersza
      * @return Wiersz
+
      */
     @Override
     public SparseDataFrame iloc(int i) {
@@ -106,23 +103,12 @@ public class SparseDataFrame extends DataFrame {
      */
     @Override
     public SparseDataFrame iloc(int from, int to) {
-        if (from < 0 || from >= rowNumber)
-            throw new DFIndexOutOfBounds("No such index: " + from);
-
-        if (to < 0 || to >= rowNumber)
-            throw new DFIndexOutOfBounds("No such index: " + to);
-
-        if (to < from)
-            throw new DFIndexOutOfBounds("unable to create range from " + from + " to " + to);
-
-
-        String[] nazwy = new String[kolumny.length];
-        Class<? extends Value>[] typy = (Class<? extends Value>[]) new Class[kolumny.length];
-        Value[] hidden = new Value[kolumny.length];
-        for (int i = 0; i < kolumny.length; i++) {
-            nazwy[i] = kolumny[i].nazwa;
-            typy[i] = kolumny[i].typ;
-            hidden[i] = ((SparseColumn) kolumny[i]).hidden;
+        checkBounds(from, to);
+        String[] nazwy = new String[columns.length];
+        Value[] hidden = new Value[columns.length];
+        for (int i = 0; i < columns.length; i++) {
+            nazwy[i] = columns[i].nazwa;
+            hidden[i] = ((SparseColumn) columns[i]).hidden;
         }
 
         SparseDataFrame df = new SparseDataFrame(nazwy, hidden);
@@ -145,11 +131,11 @@ public class SparseDataFrame extends DataFrame {
      * @return normalny DataFrame
      */
     public DataFrame toDense() {
-        String[] nazwy = new String[kolumny.length];
-        Class<? extends Value>[] typy = (Class<? extends Value>[]) new Class[kolumny.length];
-        for (int i = 0; i < kolumny.length; i++) {
-            nazwy[i] = kolumny[i].nazwa;
-            typy[i] = kolumny[i].typ;
+        String[] nazwy = new String[columns.length];
+        @SuppressWarnings("unchecked") Class<? extends Value>[] typy = (Class<? extends Value>[]) new Class[columns.length];
+        for (int i = 0; i < columns.length; i++) {
+            nazwy[i] = columns[i].nazwa;
+            typy[i] = columns[i].typ;
         }
 
         Value[] temp = new Value[typy.length];
@@ -412,7 +398,7 @@ public class SparseDataFrame extends DataFrame {
         }
 
         /**
-         * @return kopia kolumny
+         * @return kopia columns
          */
         @Override
         public SparseColumn copy() {

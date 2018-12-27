@@ -17,11 +17,10 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
     private final Class<? extends Value>[] types;
     private final Value.ValueBuilder[] factories;
-    private DBConnection connection;
-    private Statement stmt;
-    private ResultSet rs;
+    private final String recordAdder;
+    protected DBConnection connection;
 
-    protected DataFrameDB(DBConnection connection, String tableName, String[] colNames, Class<? extends Value>[] types) {
+    private DataFrameDB(DBConnection connection, String tableName, String[] colNames, Class<? extends Value>[] types) {
         super(colNames.length);
         this.connection = connection;
         this.tableName = tableName;
@@ -37,6 +36,14 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         }
         size();
 
+        StringBuilder qmarks = new StringBuilder();
+        for (int i = 0; i < colNames.length; i++) {
+            qmarks.append("?");
+            if (i < colNames.length - 1)
+                qmarks.append(",");
+        }
+
+        recordAdder = String.format("INSERT into %s VALUES (%s)", tableName, qmarks);
     }
 
     public static Builder getBuilder() {
@@ -78,17 +85,8 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         return df;
     }
 
-    private Statement getStatement() throws SQLException {
-        if (stmt == null || stmt.isClosed()) {
-            stmt = connection.connect().createStatement();
-        }
-        return stmt;
-    }
-
     public DataFrame toDataFrame() throws SQLException, DFValueBuildException {
-        getStatement();
-        rs = stmt.executeQuery(String.format("select * from %s", tableName));
-        return fromSelect(rs);
+        return fromSelect(connection.executeQuery(String.format("select * from %s", tableName)));
     }
 
     @Override
@@ -104,92 +102,63 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
     @Override
     public void addRecord(Value... values) throws DFDimensionException {
         if (values.length != getColCount())
-            throw new DFDimensionException("");//todo: better
+            throw new DFDimensionException("wrong amount of values");
 
         try {
-            getStatement();
-
-            StringBuilder s = new StringBuilder();
+            PreparedStatement stmt = connection.getPrepStatement(recordAdder);
             for (int i = 0; i < values.length; i++) {
                 Value v = values[i];
-                s.append("'").append(v.toString()).append("'");
-
-                if (i < values.length - 1)
-                    s.append(",");
-
+                stmt.setString(1 + i, v.toString());
             }
-
-            String valuesString = s.toString();
-
-            rowNumber += stmt.executeUpdate(String.format("INSERT into %s VALUES (%s)", tableName, valuesString));
+            rowNumber += stmt.executeUpdate();
 
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new DFDimensionException("");//todo: better
+            throw new DFDimensionException(e.getMessage());
 
         }
     }
 
     @Override
-    public DataFrame iloc(int from, int to) throws DFColumnTypeException {
-        try {
-            getStatement();
-
-            rs = stmt.executeQuery(String.format("SELECT * FROM %s limit %d offset %d", tableName, (to + 1 - from), from));
+    public DataFrame iloc(int from, int to) {
+        try (ResultSet rs = connection.executeQueryPrep(String.format("SELECT * FROM %s limit ? offset ?", tableName), (to + 1 - from), from)) {
             return fromSelect(rs);
-
         } catch (SQLException | DFValueBuildException e) {
             e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
         }
-        throw new RuntimeException(":REGEASRg"); //todo: better
     }
 
     @Override
-    public DataFrame get(String[] cols, boolean copy) throws DFZeroLengthCreationException, CloneNotSupportedException {
-        try {
-            getStatement();
-
-            rs = stmt.executeQuery(String.format("SELECT %s FROM %s ", String.join(",", cols), tableName));
+    public DataFrame get(String[] cols, boolean copy) throws DFZeroLengthCreationException {
+        try (ResultSet rs = connection.executeQueryPrep(String.format("SELECT ? FROM %s ", tableName), String.join(",", cols))) {
             return fromSelect(rs);
 
         } catch (SQLException | DFValueBuildException e) {
             e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
         }
-        throw new RuntimeException(":REGEASRg"); //todo: better
 
     }
-
-//    @Override
-//    public int getColCount() {
-//        return colNames.length;
-//    }
 
     @Override
     public int size() {
-        try {
-            getStatement();
-
-            rs = stmt.executeQuery(String.format("SELECT count(*) FROM %s", tableName));
+        try (ResultSet rs = connection.executeQueryPrep(String.format("SELECT count(*) FROM %s", tableName))) {
             rs.next();
-
             rowNumber = rs.getInt(1);
-            rs.close();
-            rs = null;
-
             return rowNumber;
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
         }
-        return rowNumber;
+
     }
 
     @Override
     public Value[] getRecord(int i) {
         Value[] row = new Value[getColCount()];
 
-        try {
-            getStatement();
-            rs = stmt.executeQuery(String.format("SELECT * FROM %s limit 1 offset %d", tableName, i));
+        try (ResultSet rs = connection.executeQueryPrep(String.format("SELECT * FROM %s limit ? offset ?", tableName), 1, i)) {
             rs.next();
 
             for (int j = 0; j < getColCount(); j++) {
@@ -200,34 +169,24 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
             }
 
 
-        } catch (SQLException e) {
+        } catch (SQLException | DFValueBuildException e) {
             e.printStackTrace();
-        } catch (DFValueBuildException e) {
-            e.printStackTrace();
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ignore) {
-                }
-                rs = null;
-            }
+            throw new DFIndexOutOfBounds(e.getMessage());
         }
 
         return row;
     }
 
-    /**/
     @Override
     public DBColumn get(String colname) {
 
         int index = indexMap.get(colname);
 
-        DBColumn kol = (DBColumn) kolumny[index];
+        DBColumn kol = (DBColumn) columns[index];
 
         if (kol == null) {
             kol = new DBColumn(index);
-            kolumny[index] = kol;
+            columns[index] = kol;
         }
 
         return kol;
@@ -236,14 +195,8 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
     @Override
     public void close() throws SQLException {
         connection.close();
-        if (stmt != null) {
-            stmt.close();
-        }
-        if (rs != null) {
-            rs.close();
-        }
 
-        for (Column k : kolumny) {
+        for (Column k : columns) {
             if (k instanceof DBColumn) {
                 ((DBColumn) k).close();
             }
@@ -261,9 +214,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
         s.append("|\n");
 
-        try {
-            getStatement();
-            rs = stmt.executeQuery(String.format("SELECT * FROM %s", tableName));
+        try (ResultSet rs = connection.executeQuery(String.format("SELECT * FROM %s", tableName))) {
 
             while (rs.next()) {
                 for (int j = 0; j < getColCount(); j++)
@@ -275,23 +226,21 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            rs = null;
         }
-
         return s.toString();
     }
 
     @Override
-    public GroupBy groupBy(String... colname) throws CloneNotSupportedException {
+    public GroupBy groupBy(String... colname) {
         return new GroupByDF(colname);
+    }
+
+    public void setAutoCommit(boolean b) throws SQLException {
+        connection.setAutoCommit(b);
+    }
+
+    public void commit() throws SQLException {
+        connection.commit();
     }
 
     protected static class DBConnection implements AutoCloseable {
@@ -299,11 +248,36 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         String url;
         String user;
         String password;
+        Map<String, PreparedStatement> preparedStatements;
+        Statement stmt;
 
         DBConnection(String url, String user, String password) {
             this.url = url;
             this.user = user;
             this.password = password;
+            this.preparedStatements = new HashMap<>();
+        }
+
+        public PreparedStatement getPrepStatement(String statement, Object... args) throws SQLException {
+            PreparedStatement s = preparedStatements.get(statement);
+            if (s == null || s.isClosed()) {
+                s = connect().prepareStatement(statement);
+                s.setPoolable(true);
+            }
+
+            for (int i = 0; i < args.length; i++) {
+                s.setObject(i + 1, args[i]);
+            }
+
+            return s;
+        }
+
+        public ResultSet executeQueryPrep(String statement, Object... args) throws SQLException {
+            return getPrepStatement(statement, args).executeQuery();
+        }
+
+        public ResultSet executeQuery(String statement) throws SQLException {
+            return getStatement().executeQuery(statement);
         }
 
         public Connection connect() throws SQLException {
@@ -312,10 +286,31 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
             return connection;
         }
 
+        public Statement getStatement() throws SQLException {
+            if (stmt == null || stmt.isClosed())
+                stmt = connect().createStatement();
+            return stmt;
+        }
+
         @Override
         public void close() throws SQLException {
+            for (PreparedStatement s : preparedStatements.values()) {
+                if (!s.isClosed())
+                    s.close();
+            }
+            preparedStatements.clear();
+            if (stmt != null && !stmt.isClosed())
+                stmt.close();
             if (connection != null && !connection.isClosed())
                 connection.close();
+        }
+
+        public void setAutoCommit(boolean b) throws SQLException {
+            connection.setAutoCommit(b);
+        }
+
+        public void commit() throws SQLException {
+            connection.commit();
         }
     }
 
@@ -355,12 +350,6 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
                 while (rs.next()) {
                     nameList.add(rs.getString("COLUMN_NAME"));
                     typeList.add(TypeEnum.Type.getValueType(rs.getInt("DATA_TYPE")));
-//                    System.out.println(rs.getString("TYPE_NAME"));
-//                    System.out.println(rs.getString("NULLABLE"));
-//                    System.out.println(rs.getString("COLUMN_DEF"));
-//                    System.out.println(rs.getString("IS_NULLABLE"));
-//                    System.out.println(rs.getObject("COLUMN_SIZE"));
-
                 }
 
                 Class<? extends Value>[] types = typeList.toArray(new Class[0]);
@@ -371,7 +360,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
                 return db;
 
             }
-            throw new IllegalArgumentException("something is no yes");//todo: proper handling
+            throw new IllegalStateException("Improper initial DB state");
         }
 
     }
@@ -380,24 +369,19 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
         private int index;
 
-        public DBColumn(int i) {
+        DBColumn(int i) {
             super(colNames[i], types[i]);
             index = i;
         }
 
         public Column toColumn() throws SQLException, DFValueBuildException {
             Column newCol = new Column(getName(), getType());
-            getStatement();
-            rs = stmt.executeQuery(String.format("SELECT %s FROM %s", getName(), tableName));
-            try {
-
+            try (ResultSet rs = connection.executeQueryPrep(String.format("SELECT ? FROM %s", tableName), getName())) {
                 while (rs.next()) {
                     newCol.add(factories[index].build(rs.getString(getName())));
                 }
-                rs.close();
-                rs = null;
-            } catch (DFColumnTypeException ignore) {
-                ignore.printStackTrace();
+            } catch (DFColumnTypeException e) {
+                e.printStackTrace();
             }
 
             return newCol;
@@ -405,10 +389,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
         @Override
         public int size() {
-            try {
-                getStatement();
-
-                rs = stmt.executeQuery(String.format("SELECT count(%s) FROM %s", getName(), tableName));
+            try (ResultSet rs = connection.executeQueryPrep(String.format("SELECT count(all %s) FROM %s", getName(), tableName))) {
                 rs.next();
 
                 return rs.getInt(1);
@@ -421,10 +402,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
         @Override
         public int uniqueSize() {
-            try {
-                getStatement();
-
-                rs = stmt.executeQuery(String.format("SELECT distinct count(%s) FROM %s", getName(), tableName));
+            try (ResultSet rs = connection.executeQueryPrep(String.format("SELECT count(DISTINCT %s) FROM %s", getName(), tableName))) {
                 rs.next();
 
                 return rs.getInt(1);
@@ -432,23 +410,19 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
                 e.printStackTrace();
             }
             return -1;
-        }//todo: zamykanie kolumny  i exceptopn proprtly
+        }
 
         @Override
         public Value get(int index) {
             Value v = null;
-            try {
-                getStatement();
-                rs = stmt.executeQuery(String.format("SELECT %s FROM %s limit 1 offset %d", getName(), tableName, index));
+            try (ResultSet rs = connection.executeQueryPrep(String.format("SELECT %s FROM %s limit 1 offset ?", getName(), tableName), index)) {
                 rs.next();
 
                 Value.ValueBuilder vb = factories[this.index];
                 String s = rs.getString(getName());
                 v = vb.build(s);
 
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } catch (DFValueBuildException e) {
+            } catch (SQLException | DFValueBuildException e) {
                 e.printStackTrace();
             }
 
@@ -492,12 +466,9 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
         @Override
         public void add(Value o) throws DFColumnTypeException {
-            try {
-                getStatement();
+            try (PreparedStatement stmt = connection.getPrepStatement((String.format("INSERT into %s(%s) VALUES (?)", tableName, getName())), o.toString())) {
 
-                String value = o.toString();
-
-                rowNumber += stmt.executeUpdate(String.format("INSERT into %s(%s) VALUES (%s)", tableName, getName(), value));
+                rowNumber += stmt.executeUpdate();
 
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -525,9 +496,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
             s.append("|\n");
 
-            try {
-                getStatement();
-                rs = stmt.executeQuery(String.format("SELECT %s FROM %s", getName(), tableName));
+            try (ResultSet rs = connection.executeQueryPrep(String.format("SELECT %s FROM %s", getName(), tableName))) {
 
                 while (rs.next()) {
                     s.append(String.format("|%30.30s", rs.getString(getName())));
@@ -558,7 +527,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         GroupByDF(String... colname) {
 
             groupby = String.join(", ", colname);
-            ArrayList<String> ls = new ArrayList<String>(Arrays.asList(getNames()));
+            ArrayList<String> ls = new ArrayList<>(Arrays.asList(getNames()));
             ls.removeAll(Arrays.asList(colname));
 
             other = ls.toArray(new String[0]);
@@ -577,7 +546,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         @Override
         public DataFrame max() throws DFApplyableException {
             if (other.length == 0)
-                throw new DFApplyableException("stuff");
+                throw new DFApplyableException("No Comparable Data");
             return getApplied(otherFunction("max", other));
 
         }
@@ -585,35 +554,35 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         @Override
         public DataFrame min() throws DFApplyableException {
             if (other.length == 0)
-                throw new DFApplyableException("stuff");
+                throw new DFApplyableException("No Comparable Data");
             return getApplied(otherFunction("min", other));
         }
 
         @Override
         public DataFrame mean() throws DFApplyableException {
             if (otherNumeric.length == 0)
-                throw new DFApplyableException("stuff");
+                throw new DFApplyableException("No Numeric Data");
             return getApplied(otherFunction("avg", otherNumeric));
         }
 
         @Override
         public DataFrame sum() throws DFApplyableException {
             if (otherNumeric.length == 0)
-                throw new DFApplyableException("stuff");
+                throw new DFApplyableException("No Numeric Data");
             return getApplied(otherFunction("sum", otherNumeric));
         }
 
         @Override
         public DataFrame var() throws DFApplyableException {
             if (otherNumeric.length == 0)
-                throw new DFApplyableException("stuff");
+                throw new DFApplyableException("No Numeric Data");
             return getApplied(otherFunction("variance", otherNumeric));
         }
 
         @Override
         public DataFrame std() throws DFApplyableException {
             if (otherNumeric.length == 0)
-                throw new DFApplyableException("stuff");
+                throw new DFApplyableException("No Numeric Data");
             return getApplied(otherFunction("std", otherNumeric));
         }
 
@@ -628,19 +597,19 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         }
 
         private DataFrame getApplied(String operation) throws DFApplyableException {
-            try {
-                getStatement();
-                String sql;
-                if (groupby.length() > 0)
-//                    //"select "+groupby+", "+operation+" from "+tableName+" group by "+groupby+" order by "+groupby; //
-                    sql = String.format("select %1$s,%2$s from %3$s group by %1$s order by %1$s", groupby, operation, tableName);
-                else
-                    sql = String.format("select %s from %s order by %s", operation, tableName, operation);
 
-//                System.out.println(sql);
-                rs = stmt.executeQuery(sql);
+            String sql;
+            if (groupby.length() > 0)
+//                    //"select "+groupby+", "+operation+" from "+tableName+" group by "+groupby+" order by "+groupby; //
+                sql = String.format("select %1$s,%2$s from %3$s group by %1$s order by %1$s", groupby, operation, tableName);
+            else
+                sql = String.format("select %s from %s order by %s", operation, tableName, operation);
+
+            try (ResultSet rs = connection.executeQueryPrep(sql)) {
                 return fromSelect(rs);
-            } catch (Exception e) {
+            } catch (SQLException e) {
+                throw new DFApplyableExceptionSQL(e);
+            } catch (DFValueBuildException e) {
                 throw new DFApplyableException(e.getMessage());
             }
         }
@@ -706,32 +675,35 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         }
 
         private void initGroups() throws DFApplyableException {
-            try {
-                getStatement();
-
-                rs = stmt.executeQuery(String.format("select distinct %s from %s order by %s", groupby, tableName, groupby));
+            DataFrame values;
+            try (ResultSet rs = connection.executeQuery(String.format("select distinct %s from %s order by %s", groupby, tableName, groupby))) {
                 values = fromSelect(rs);
+            } catch (SQLException e) {
+                throw new DFApplyableExceptionSQL(e);
+            } catch (DFValueBuildException e) {
+                e.printStackTrace();
+                throw new DFApplyableException("Improperly formatted data" + e.getMessage());
+            }
+            String otherNames = String.join(",", other);
 
-                String otherNames = String.join(",", other);
+            groupedDF = new HashMap<>();
+            String[] group_col_id = groupby.split(", ");
 
-                groupedDF = new HashMap<>();
-                String[] group_col_id = groupby.split(", ");
-                for (int i = 0; i < values.size(); i++) {
-                    Value[] row = values.getRecord(i);
-                    String key = getCondition(group_col_id, row);
+            for (int i = 0; i < values.size(); i++) {
+                Value[] row = values.getRecord(i);
+                String key = getCondition(group_col_id, row);
+                try (ResultSet rs = connection.executeQuery(String.format("select %s from %s where %s", otherNames, tableName, key))) {
 
-                    rs = stmt.executeQuery(String.format("select %s from %s where %s", otherNames, tableName, key));
                     DataFrame group = fromSelect(rs);
-
                     groupedDF.put(i, group);
-                }
-                rs.close();
 
-            } catch (SQLException | DFValueBuildException e) {
-                groupedDF = null;
-                throw new DFApplyableException(e.getMessage());
-            } finally {
-                rs = null;
+                } catch (SQLException | DFValueBuildException e) {
+                    groupedDF = null;
+                    if (e instanceof SQLException)
+                        throw new DFApplyableExceptionSQL((SQLException) e);
+                    else
+                        throw new DFApplyableException(e.getMessage());
+                }
             }
         }
 

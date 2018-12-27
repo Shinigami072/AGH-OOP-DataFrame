@@ -10,42 +10,43 @@ import java.util.*;
 
 public class DataFrame {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    protected Column[] kolumny;
+    protected Column[] columns;
 
-    //true
-    public DataFrame(String path, Class<? extends Value>[] typy_kolumn) throws IOException, DFColumnTypeException, DFValueBuildException {
-        this(path, typy_kolumn, null);
+    //file loading constructors -
+    //true - file contains column names
+    public DataFrame(String path, Class<? extends Value>[] column_type) throws IOException, DFColumnTypeException, DFValueBuildException {
+        this(path, column_type, null);
     }
     protected int rowNumber;
 
-    //false
-    public DataFrame(String path, Class<? extends Value>[] typy_kolumn, String[] nazwy_kolumn) throws IOException, DFColumnTypeException, DFValueBuildException {
-        this(typy_kolumn.length);
-        boolean header = nazwy_kolumn == null;
-        for (int i = 0; i < typy_kolumn.length; i++)
-            kolumny[i] = new Column(header ? "" : nazwy_kolumn[i], typy_kolumn[i]);
+    //false - file does not contain column names
+    public DataFrame(String path, Class<? extends Value>[] column_type, String[] column_name) throws IOException, DFColumnTypeException, DFValueBuildException {
+        this(column_type.length);
+        boolean header = column_name == null;
+        for (int i = 0; i < column_type.length; i++)
+            columns[i] = new Column(header ? "" : column_name[i], column_type[i]);
         readFile(path, header);
     }
 
     protected DataFrame(int count) throws DFZeroLengthCreationException {
         if (count == 0)
             throw new DFZeroLengthCreationException();
-        kolumny = new Column[count];
+        columns = new Column[count];
         rowNumber = 0;
 
     }
 
-    public DataFrame(Column[] kolumny) throws DFZeroLengthCreationException {
-        if (kolumny.length == 0)
+    public DataFrame(Column[] columns) throws DFZeroLengthCreationException {
+        if (columns.length == 0)
             throw new DFZeroLengthCreationException();
-        this.kolumny = kolumny;
-        rowNumber = kolumny[0].size();
+        this.columns = columns;
+        rowNumber = columns[0].size();
     }
 
     public DataFrame(String[] nazwyKolumn, Class<? extends Value>[] typyKolumn) {
         this(nazwyKolumn.length);
         for (int i = 0; i < typyKolumn.length; i++)
-            kolumny[i] = new Column(nazwyKolumn[i], typyKolumn[i]);
+            columns[i] = new Column(nazwyKolumn[i], typyKolumn[i]);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,18 +55,18 @@ public class DataFrame {
             String[] strLine;
             if (header) {
                 strLine = br.readLine().split(",");
-                for (int i = 0; i < kolumny.length; i++) {
-                    kolumny[i].nazwa = strLine[i];
+                for (int i = 0; i < columns.length; i++) {
+                    columns[i].nazwa = strLine[i];
                 }
             }
 
             String temp;
 
 
-            Value[] tempValues = new Value[kolumny.length];
-            Value.ValueBuilder[] builders = new Value.ValueBuilder[kolumny.length];
-            for (int i = 0; i < kolumny.length; i++) {
-                builders[i] = Value.builder(kolumny[i].typ);
+            Value[] tempValues = new Value[columns.length];
+            Value.ValueBuilder[] builders = new Value.ValueBuilder[columns.length];
+            for (int i = 0; i < columns.length; i++) {
+                builders[i] = Value.builder(columns[i].typ);
             }
 
             while ((temp = br.readLine()) != null) {
@@ -106,27 +107,29 @@ public class DataFrame {
     }
 
     public String[] getNames(){
-        String[] names = new String[kolumny.length];
-        for(int i=0;i<kolumny.length;i++)
-            names[i]=kolumny[i].nazwa;
+        String[] names = new String[columns.length];
+        for (int i = 0; i < columns.length; i++)
+            names[i] = columns[i].nazwa;
         return names;
     }
 
     public Class<? extends Value>[] getTypes(){
-        Class<? extends Value>[] types= ( Class<? extends Value>[])(new Class[kolumny.length]);
-        for(int i=0;i<kolumny.length;i++)
-            types[i]=kolumny[i].typ;
+        //noinspection unchecked
+        Class<? extends Value>[] types = (Class<? extends Value>[]) (new Class[columns.length]);
+        for (int i = 0; i < columns.length; i++)
+            types[i] = columns[i].typ;
         return types;
     }
 
     /**
-     * getter kolumny o danej nazwie
+     * getter columns o danej nazwie
      * zwraca pierwsza kolumnę o danej nazwie
-     * @param colname nazwa kolumny
+     * @param colname nazwa columns
      * @return kolumna
      */
+    //todo: use map for faster get
     public Column get(String colname) {
-        for (Column k : kolumny)
+        for (Column k : columns)
             if(k.nazwa.equals(colname))
                 return  k;
 
@@ -138,21 +141,21 @@ public class DataFrame {
      * @param values elementy rekordu
      */
     public void addRecord(Value... values) throws DFColumnTypeException, DFDimensionException {
-        if(values.length!=kolumny.length)
+        if (values.length != columns.length)
             throw new DFDimensionException(String.format("DF col %d , record length: %d", getColCount(), values.length));
-        for(int i = 0; i<kolumny.length; i++)
-            if(!kolumny[i].typ.isInstance(values[i]))
-                throw new DFColumnTypeException(kolumny[i], values[i],i);
+        for (int i = 0; i < columns.length; i++)
+            if (!columns[i].typ.isInstance(values[i]))
+                throw new DFColumnTypeException(columns[i], values[i], i);
 
         int i=0;
         rowNumber++;
-        for (Column k : kolumny)
+        for (Column k : columns)
             k.add(values[i++]);
 
     }
 
     public int getColCount() {
-        return kolumny.length;
+        return columns.length;
     }
 
     /**
@@ -163,9 +166,9 @@ public class DataFrame {
     public Value[] getRecord(int i) {
         if (i < 0 || i > size())
             throw new DFIndexOutOfBounds("Out of bounds: "+i);
-        Value[] temp=new Value[kolumny.length];
+        Value[] temp = new Value[columns.length];
         int j=0;
-        for (Column k : kolumny)
+        for (Column k : columns)
             temp[j++]=k.get(i);
 
         return temp;
@@ -188,6 +191,24 @@ public class DataFrame {
      * @return Wiersze
      */
     public DataFrame iloc(int from, int to) throws DFColumnTypeException{
+        checkBounds(from, to);
+        String[] nazwy = new String[columns.length];
+        @SuppressWarnings("unchecked") Class<? extends Value>[] typy = (Class<? extends Value>[]) (new Class[columns.length]);
+        for (int i = 0; i < columns.length; i++) {
+            nazwy[i] = columns[i].nazwa;
+            typy[i] = columns[i].typ;
+        }
+
+        DataFrame df = new DataFrame(nazwy, typy);
+
+        for (int i = from; i <= to; i++) {
+            df.addRecord(getRecord(i));
+        }
+
+        return df;
+    }
+
+    protected void checkBounds(int from, int to) {
         if(from<0 || from>=rowNumber)
             throw new DFIndexOutOfBounds("No such index: "+from);
 
@@ -196,23 +217,7 @@ public class DataFrame {
 
         if(to < from)
             throw new DFIndexOutOfBounds("unable to create range from " + from + " to "+to);
-
-        String[] nazwy = new String[kolumny.length];
-        Class<? extends Value>[] typy= ( Class<? extends Value>[])(new Class[kolumny.length]);
-        for(int i=0;i<kolumny.length;i++) {
-            nazwy[i] =kolumny[i].nazwa;
-            typy[i] = kolumny[i].typ;
-        }
-
-        DataFrame df=new DataFrame(nazwy,typy);
-
-        for(int i=from;i<=to;i++){
-            df.addRecord(getRecord(i));
-        }
-
-        return df;
     }
-
     public GroupBy groupBy(String... colname) throws CloneNotSupportedException {
 
         class ValueGroup implements Comparable<ValueGroup>{
@@ -275,61 +280,17 @@ public class DataFrame {
 
     }
 
-//    public Hashtable<Value, DataFrame> groupBy(String colname){
-//        Column kol  =get(colname);
-//        Hashtable<Value, DataFrame> output = new Hashtable<>(kol.uniqueSize());
-//
-//        for (int i = 0; i < rowNumber; i++) {
-//            Value key=kol.get(i);
-//            Value[] row = getRecord(i);
-//            DataFrame ll = output.get(key);
-//
-//            if(ll!= null)
-//               ll.addRecord(row);
-//
-//            else{
-//                ll  =new SparseDataFrame(getNames(),getTypes(),row);
-//                ll.addRecord(row);
-//                output.put(key,ll);
-//            }
-//        }
-//        return output;
-//    }
-//
-//    public Grupator4000 groupBy(String[] colname){
-//        Hashtable<Value,DataFrame> initial =  groupBy(colname[0]);
-//
-//        LinkedList<DataFrame> lista;
-//
-//        if(colname.length ==1)
-//            lista = new LinkedList<>(initial.values());
-//        else
-//            lista= new LinkedList<>();
-//
-//        LinkedList<DataFrame> temp= new LinkedList<>(initial.values());
-//
-//        for (int i = 1; i < colname.length; i++) {
-//            lista.clear();
-//            for(DataFrame df:temp)
-//                lista.addAll(df.groupBy(colname[i]).values());
-//            temp.clear();
-//            temp.addAll(lista);
-//        }
-//
-//        return new Grupator4000(lista,colname);
-//
-//    }
 
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
         String[] str;
-        for (Column k : kolumny) {
+        for (Column k : columns) {
             s.append(String.format("|%-14.14s:%15.15s", k.nazwa, k.typ.getSimpleName()));
         }
         s.append("|\n");
         for (int i = 0; i < rowNumber; i++) {
-            for (Column k : kolumny)
+            for (Column k : columns)
                 s.append(String.format("|%30.30s", k.get(i).toString()));
             s.append("|\n");
         }
@@ -534,23 +495,24 @@ public class DataFrame {
     public boolean equals(Object obj) {
         if (obj instanceof DataFrame) {
             DataFrame df = (DataFrame) obj;
-            return Arrays.deepEquals(kolumny, df.kolumny);
+            return Arrays.deepEquals(columns, df.columns);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(kolumny);
+        return Arrays.hashCode(columns);
     }
 
+    //todo: possible memory improvement - store groups as lists of rows in original DataFrame
     public final class Grupator4000 implements GroupBy {
 
-        private LinkedList<DataFrame> groups;
-        private String[]   id_colnames;
-        private String[] data_colnames;
+        private final LinkedList<DataFrame> groups;
+        private final String[] id_colnames;
+        private final String[] data_colnames;
 
-        private Column[] id_columns;
+        private final Column[] id_columns;//todo- possible improvement
 
 
         public Grupator4000(Collection<DataFrame> collection, String[] colnames) {
@@ -565,6 +527,7 @@ public class DataFrame {
             outer:
             for (String colname : all_colnames) {
 
+                //setn containing all_colnames -excluding id colnames- used for faster access to data
                 for (String id : id_colnames)
                     if (colname.equals(id))
                         continue outer;
@@ -573,6 +536,8 @@ public class DataFrame {
                 j++;
             }
 
+
+            //separating id_columns into separate arrays- not dataframe
             for(int i = 0; i<colnames.length; i++) {
                 Column temp = groups.getFirst().get(colnames[i]);
                 id_columns[i] = new Column(temp.nazwa, temp.typ);
@@ -605,7 +570,6 @@ public class DataFrame {
 
             try {
                 DataFrame output =null;
-
                 for (int group = 0; group < groups.size(); group++) {
 
 
@@ -616,6 +580,7 @@ public class DataFrame {
                         String[]   temp_colnames = temp.getNames();
                         String[] output_colnames = new String[temp_colnames.length+id_colnames.length];
                         Class<? extends Value>[]   temp_types = temp.getTypes();
+                        //noinspection unchecked
                         Class<? extends Value>[] output_types = new Class[temp_colnames.length+id_colnames.length];
 
                         for (int i = 0; i < output_colnames.length; i++) {

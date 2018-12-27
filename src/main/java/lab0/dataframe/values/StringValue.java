@@ -1,12 +1,12 @@
 package lab0.dataframe.values;
 
-import java.time.LocalDateTime;
-
 public class StringValue extends Value {
 
-    private String val;
+    private final String val;
 
-    StringValue() {}
+    StringValue() {
+        val = "";
+    }
     public StringValue(String value){
         val=value;
     }
@@ -35,7 +35,7 @@ public class StringValue extends Value {
     /**
      * Unsupported
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not supported
      */
     @Override
     public StringValue sub(Value v) throws UnsupportedOperationException{
@@ -45,7 +45,7 @@ public class StringValue extends Value {
     /**
      * Unsupported
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not supported
      */
     @Override
     public StringValue mul(Value v) throws UnsupportedOperationException{
@@ -55,7 +55,7 @@ public class StringValue extends Value {
     /**
      * Unsupported
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not supported
      */
     @Override
     public StringValue div(Value v) throws UnsupportedOperationException{
@@ -65,7 +65,7 @@ public class StringValue extends Value {
     /**
      * Unsupported
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not supported
      */
     @Override
     public StringValue pow(Value v) throws UnsupportedOperationException{
@@ -75,8 +75,8 @@ public class StringValue extends Value {
     /**
      * Checks if values.equals is true
      * is false if v is null or not StringValue
-     * @param v
-     * @return
+     * @param v to be compared
+     * @return if is equal
      */
     @Override
     public boolean eq(Value v) {

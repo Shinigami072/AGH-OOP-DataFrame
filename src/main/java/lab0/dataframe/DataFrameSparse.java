@@ -8,15 +8,15 @@ import lab0.dataframe.values.Value;
 
 import java.io.IOException;
 
-public class SparseDataFrame extends DataFrame {
+public class DataFrameSparse extends DataFrame {
 
     //true
-    public SparseDataFrame(String path, Value[] hide) throws IOException, DFColumnTypeException, DFValueBuildException {
+    public DataFrameSparse(String path, Value[] hide) throws IOException, DFColumnTypeException, DFValueBuildException {
         this(path, hide, null);
     }
 
     //false
-    public SparseDataFrame(String path, Value[] hide, String[] nazwy_kolumn) throws IOException, DFColumnTypeException, DFValueBuildException {
+    public DataFrameSparse(String path, Value[] hide, String[] nazwy_kolumn) throws IOException, DFColumnTypeException, DFValueBuildException {
         super(hide.length);
         boolean header = nazwy_kolumn == null;
         for (int i = 0; i < hide.length; i++)
@@ -24,13 +24,13 @@ public class SparseDataFrame extends DataFrame {
         readFile(path, header);
     }
 
-    public SparseDataFrame(String[] nazwyKolumn, Value[] hide) {
+    public DataFrameSparse(String[] nazwyKolumn, Value[] hide) {
         super(nazwyKolumn.length);
         for (int i = 0; i < hide.length; i++)
             columns[i] = new SparseColumn(nazwyKolumn[i], hide[i]);
     }
 
-    public SparseDataFrame(DataFrame df, Value[] hide) {
+    public DataFrameSparse(DataFrame df, Value[] hide) {
         super(df.columns.length);
         String[] nazwyKolumn = df.getNames();
         for (int i = 0; i < hide.length; i++)
@@ -46,7 +46,7 @@ public class SparseDataFrame extends DataFrame {
         }
     }
 
-    public SparseDataFrame(SparseColumn[] kolumny) {
+    public DataFrameSparse(SparseColumn[] kolumny) {
         super(kolumny);
     }
 
@@ -63,14 +63,14 @@ public class SparseDataFrame extends DataFrame {
     }
 
     /**
-     * Get SparseDataFrame o danych kolumnach
+     * Get DataFrameSparse o danych kolumnach
      *
      * @param cols nazwy kolumn
      * @param copy wykonanie głębokiej kopii
      * @return podzbiór dF
      */
     @Override
-    public SparseDataFrame get(String[] cols, boolean copy) {
+    public DataFrameSparse get(String[] cols, boolean copy) {
         SparseColumn[] kolumny = new SparseColumn[cols.length];
 
         for (int i = 0; i < cols.length; i++)
@@ -79,30 +79,30 @@ public class SparseDataFrame extends DataFrame {
             else
                 kolumny[i] = get(cols[i]);
 
-        return new SparseDataFrame(kolumny);
+        return new DataFrameSparse(kolumny);
     }
 
     /**
-     * Zwraca wiersz jako SparseDataFrame
+     * Zwraca wiersz jako DataFrameSparse
      *
      * @param i nr wiersza
      * @return Wiersz
 
      */
     @Override
-    public SparseDataFrame iloc(int i) {
+    public DataFrameSparse iloc(int i) {
         return iloc(i, i);
     }
 
     /**
-     * Zwraca wiersze jako SparseDataFrame
+     * Zwraca wiersze jako DataFrameSparse
      *
      * @param from od
      * @param to   do
      * @return Wiersze
      */
     @Override
-    public SparseDataFrame iloc(int from, int to) {
+    public DataFrameSparse iloc(int from, int to) {
         checkBounds(from, to);
         String[] nazwy = new String[columns.length];
         Value[] hidden = new Value[columns.length];
@@ -111,7 +111,7 @@ public class SparseDataFrame extends DataFrame {
             hidden[i] = ((SparseColumn) columns[i]).hidden;
         }
 
-        SparseDataFrame df = new SparseDataFrame(nazwy, hidden);
+        DataFrameSparse df = new DataFrameSparse(nazwy, hidden);
         try {
 
             for (int i = from; i <= to; i++) {

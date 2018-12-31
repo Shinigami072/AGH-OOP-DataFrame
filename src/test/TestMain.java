@@ -1,25 +1,24 @@
 import lab0.dataframe.DataFrame;
-import lab0.dataframe.DataFrameDB;
 import lab0.dataframe.exceptions.DFApplyableException;
 import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.exceptions.DFValueBuildException;
-import lab0.dataframe.groupby.GroupBy;
-import lab0.dataframe.values.IntegerValue;
-import lab0.dataframe.values.StringValue;
+import lab0.dataframe.DataFrameThreaded;
+import lab0.dataframe.values.*;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.*;
 
 class TestMain {
 
     public static void main(String[] argv) throws IOException, DFColumnTypeException, DFApplyableException, CloneNotSupportedException, SQLException, ClassNotFoundException, DFValueBuildException {
 //        Class.forName("com.mysql.jdbc.Driver");
-        DataFrameDB db = DataFrameDB.getBuilder()
-                .setUrl("jdbc:mysql://mysql.agh.edu.pl/krzysst")
-                .setLogin("krzysst", "2JuPF0y9TSCvuUsL")
-                .setName("city").build();
+//        DataFrameDB db = DataFrameDB.getBuilder()
+//                .setUrl("jdbc:mysql://mysql.agh.edu.pl/krzysst")
+//                .setLogin("krzysst", "2JuPF0y9TSCvuUsL")
+//                .setName("city").build();
 //        DataFrameDB db =DataFrameDB.getBuilder()
 //                .setUrl("jdbc:mysql://ensembldb.ensembl.org/rattus_norvegicus_core_70_5")
 //                .setLogin("anonymous","")
@@ -28,105 +27,140 @@ class TestMain {
 //        for(int i=0;i<db.size();i++){
 //        System.out.println(Arrays.toString(db.getRecord(i)));
 //        }
-        final int N = 10;
+//        DataFrame db = new DataFrame("city.csv",new Class[]{IntegerValue.class,StringValue.class,StringValue.class,StringValue.class,IntegerValue.class});
+        DataFrame dbA = null, dbB = null;
+        final int N = 4000;
+
+//        for (int j = 0; j < 4; j++) {
+//            ExecutorService threadPool = Executors.newFixedThreadPool(10);//Executors.newWorkStealingPool(10);
+//            long B = System.currentTimeMillis();
+//            for (int i = 0; i < N; i++)
+//                dbB = new DataFrame("city.csv", new Class[]{IntegerValue.class, StringValue.class, StringValue.class, StringValue.class, IntegerValue.class});
+//            System.out.printf("B %3.2f  ", ((System.currentTimeMillis() - B) / (float) N));
+//            long A = System.currentTimeMillis();
+//            for (int i = 0; i < N; i++)
+//                dbA = new DataFrameThreaded(threadPool, "city.csv", new Class[]{IntegerValue.class, StringValue.class, StringValue.class, StringValue.class, IntegerValue.class});
+//            System.out.printf("A %3.2f\n", ((System.currentTimeMillis() - A) / (float) N));
+//            threadPool.shutdown();
+//        }
+
+        System.out.println("GroupBy");
+        for (int j = 0; j < 4; j++) {
+            long B = System.currentTimeMillis();
+//            for (int i = 0; i < 2; i++)
+//                dbB = new DataFrame("test/testData/multi/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+//            System.out.printf("B %3.2f %d ", ((System.currentTimeMillis() - B) / (float) N),dbB.size());
+
+            ExecutorService threadPool = Executors.newFixedThreadPool(20);//Executors.newWorkStealingPool(10);
+            long A = System.currentTimeMillis();
+            for (int i = 0; i < 2; i++)
+                dbA = new DataFrameThreaded(threadPool, "test/testData/multi/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+            System.out.printf("A %3.2f %d", ((System.currentTimeMillis() - A) / (float) N), dbA.size());
+            threadPool.shutdown();
+
+            threadPool = Executors.newWorkStealingPool(10);
+            long C = System.currentTimeMillis();
+            for (int i = 0; i < 2; i++)
+                dbA = new DataFrameThreaded(threadPool, "test/testData/multi/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+            System.out.printf("C %3.2f %d\n", ((System.currentTimeMillis() - C) / (float) N), dbA.size());
+            threadPool.shutdown();
+        }
+        //        DataFrameThreaded db1 = new DataFrameThreaded(threadPool,db);
         Random r = new Random();
-        db.setAutoCommit(false);
-        for (int i = 0; i < N; i++) {
-            db.addRecord(new IntegerValue(db.size() + 1), new StringValue("TEST"), new StringValue("AFG"), new StringValue("TEST"), new IntegerValue(0));
-        }
-        db.setAutoCommit(true);
-        db.setAutoCommit(false);
-        DataFrame.Column c = db.get("CountryCode");
-        System.out.println(c.size());
-        System.out.println(c.uniqueSize());
-        System.out.println(c);
-        System.out.println(c.get(0));
-        System.out.println(db);
-        System.out.println(Arrays.toString(db.getRecord(r.nextInt(db.size()))));
-        long cur = System.currentTimeMillis();
-        for (int i = 0; i < N; i++) {
-            int a = r.nextInt(db.size());
-            int b = r.nextInt(db.size());
-            db.iloc(Math.min(a, b), Math.max(a, b));
-
-        }
-        String[] cols = db.getNames();
-        for (int i = 0; i < N; i++) {
-            db.get(new String[]{cols[r.nextInt(cols.length)], cols[r.nextInt(cols.length)]}, false);
-        }
-        System.out.println(System.currentTimeMillis() - cur);
-        System.out.println("DB start");
-
-        long mean1 = System.currentTimeMillis();
-        for (int i = 0; i < N; i++) {
-            GroupBy gb = db.groupBy(db.getNames()[r.nextInt(db.getColCount())]);
-            gb.std();
-        }
-        mean1 = System.currentTimeMillis() - mean1;
-        System.out.println("DB finished");
-        db.setAutoCommit(true);
-
-        DataFrame db_ = db.toDataFrame();
-        long mean2 = System.currentTimeMillis();
-        for (int i = 0; i < N; i++) {
-            GroupBy gb = db_.groupBy(db_.getNames()[r.nextInt(db.getColCount())]);
-            gb.std();
-        }
-
-        mean2 = System.currentTimeMillis() - mean2;
-        System.out.println("DF finished");
-
-
-        System.out.printf("%d : %d", mean1, mean2);
-
-//        System.out.println(db.size());
 //        System.out.println(db);
-//        DataFrame.Column k = db.get(db.getNames()[0]);
-//        System.out.println(k);
-//        System.out.println(k.get(0));
-//        System.out.println(db.iloc(1,4));
-//        System.out.println(db.iloc(1));
-//        try {
-//            db.addRecord(new StringValue("1234567891251"), new StringValue("This Lock"), new StringValue("Anton Sokolov"), new IntegerValue(2018));
-//        }catch (Exception ignore){}
-//        System.out.println(db);
+//        long cur = System.currentTimeMillis();
+//        for (int i = 0; i < N; i++) {
+//            int a = 2950;//r.nextInt(db.size());
+//            int b = 2971;//r.nextInt(db.size());
+////            System.out.println(db1.iloc(Math.min(a, b), Math.max(a, b)));
 //
-//        System.out.println(k.get(0));
-//        GroupBy grp = db.groupBy("isbn");
-//
-//
-//        System.out.println(grp.max());
-//        System.out.println(grp.min());
-//        System.out.println(grp.mean());
-//        System.out.println(grp.sum());
-//        System.out.println(grp.std());
-//        System.out.println(grp.var());
-//        System.out.println(grp.apply(new VarApplyable()));
+//        }
+//        System.out.println(Arrays.toString(db.getRecord(20)));
+//        A = System.currentTimeMillis();
+//        dbA.groupBy("CountryCode").max();
+//        System.out.println(System.currentTimeMillis() - A);
+//        B = System.currentTimeMillis();
+//        dbB.groupBy("CountryCode").max();
+//        System.out.println(System.currentTimeMillis() - B);
 
 
-//        DataFrame df = new DataFrame(new String[]{"A", "B", "C"}, new Class[]{StringValue.class, IntegerValue.class, FloatValue.class});
-//        System.out.println(df);
-//        df.addRecord(new StringValue("A"), new IntegerValue(15),new FloatValue( 17.0f));
-//        df.addRecord(new StringValue("B"), new IntegerValue(5), new FloatValue(1.0f));
-//        df.addRecord(new StringValue("C"), new IntegerValue(4), new FloatValue(7.0f));
-//        df.addRecord(new StringValue("D"), new IntegerValue(5), new FloatValue(7.5f));
-//        System.out.println(df);
+//        String[] cols = db.getNames();
+//        for (int i = 0; i < N; i++) {
+//            db.get(new String[]{cols[r.nextInt(cols.length)], cols[r.nextInt(cols.length)]}, false);
+//        }
+//        System.out.println(System.currentTimeMillis() - cur);
+//        System.out.println("DB start");
+//
+//        long mean1 = System.currentTimeMillis();
+//        for (int i = 0; i < N; i++) {
+//            GroupBy gb = db.groupBy(db.getNames()[r.nextInt(db.getColCount())]);
+//            gb.std();
+//        }
+//        mean1 = System.currentTimeMillis() - mean1;
+//        System.out.println("DB finished");
+//        db.setAutoCommit(true);
+//
+//        DataFrame db_ = db.toDataFrame();
+//        long mean2 = System.currentTimeMillis();
+//        for (int i = 0; i < N; i++) {
+//            GroupBy gb = db_.groupBy(db_.getNames()[r.nextInt(db.getColCount())]);
+//            gb.std();
+//        }
+//
+//        mean2 = System.currentTimeMillis() - mean2;
+//        System.out.println("DF finished");
+//
+//
+//        System.out.printf("%d : %d", mean1, mean2);
+//
+////        System.out.println(db.size());
+////        System.out.println(db);
+////        DataFrame.Column k = db.get(db.getNames()[0]);
+////        System.out.println(k);
+////        System.out.println(k.get(0));
+////        System.out.println(db.iloc(1,4));
+////        System.out.println(db.iloc(1));
+////        try {
+////            db.addAllRecords(new StringValue("1234567891251"), new StringValue("This Lock"), new StringValue("Anton Sokolov"), new IntegerValue(2018));
+////        }catch (Exception ignore){}
+////        System.out.println(db);
 ////
-//        System.out.println(df.get("A"));
-//        System.out.println(df.get("B"));
-//        System.out.println(df.get("C"));
+////        System.out.println(k.get(0));
+////        GroupBy grp = db.groupBy("isbn");
 ////
-////        System.out.println(df.iloc(1));
 ////
-////        System.out.println(df.iloc(2, 3));
-////
-////        System.out.println(df.get(new String[]{"A", "B"}, false));
-////        System.out.println(df.get(new String[]{"A", "B"}, true));
+////        System.out.println(grp.max());
+////        System.out.println(grp.min());
+////        System.out.println(grp.mean());
+////        System.out.println(grp.sum());
+////        System.out.println(grp.std());
+////        System.out.println(grp.var());
+////        System.out.println(grp.apply(new VarApplyable()));
+//
+//
+////        DataFrame df = new DataFrame(new String[]{"A", "B", "C"}, new Class[]{StringValue.class, IntegerValue.class, FloatValue.class});
+////        System.out.println(df);
+////        df.addAllRecords(new StringValue("A"), new IntegerValue(15),new FloatValue( 17.0f));
+////        df.addAllRecords(new StringValue("B"), new IntegerValue(5), new FloatValue(1.0f));
+////        df.addAllRecords(new StringValue("C"), new IntegerValue(4), new FloatValue(7.0f));
+////        df.addAllRecords(new StringValue("D"), new IntegerValue(5), new FloatValue(7.5f));
+////        System.out.println(df);
+//////
+////        System.out.println(df.get("A"));
+////        System.out.println(df.get("B"));
+////        System.out.println(df.get("C"));
+//////
+//////        System.out.println(df.iloc(1));
+//////
+//////        System.out.println(df.iloc(2, 3));
+//////
+//////        System.out.println(df.get(new String[]{"A", "B"}, false));
+//////        System.out.println(df.get(new String[]{"A", "B"}, true));
 ////        System.out.println(df.get(new String[]{"A", "B"}, true) != df.get(new String[]{"A", "B"}, false));
 ////        DataFrame df =new DataFrame("sparse.csv", new String[]{"float","float","float"});
 ////        System.out.println(df.iloc(100));
 ////
-////        SparseDataFrame sf=new SparseDataFrame(df,new Object[]{0.0f,0.0f,0.0f});//new SparseDataFrame("sparse.csv", new String[]{"float","float","float"},new Object[]{0.0f,0.0f,0.0f});
+////        DataFrameSparse sf=new DataFrameSparse(df,new Object[]{0.0f,0.0f,0.0f});//new DataFrameSparse("sparse.csv", new String[]{"float","float","float"},new Object[]{0.0f,0.0f,0.0f});
 ////        System.out.println(sf.iloc(100));
 //        Value.ValueBuilder b1 = Value.builder(StringValue.class);
 //        Value t = b1.build("TEST");
@@ -146,9 +180,7 @@ class TestMain {
 ////        System.out.println(group.std());
 
 
-
-
     }
 
-  }
+}
 

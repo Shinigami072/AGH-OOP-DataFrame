@@ -472,7 +472,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
             } catch (SQLException e) {
                 e.printStackTrace();
-                throw new DFDimensionException("");//todo: better
+                throw new DFDimensionException(e.getMessage());
 
             }
         }
@@ -619,6 +619,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
             if (groupedDF == null) {
                 initGroups();
             }
+
             try {
 
                 DataFrame output = null;
@@ -628,21 +629,11 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
                     DataFrame group = apply.apply(groupedDF.get(i));
 
                     if (output == null) {
-                        output = getOutputDataFrame(group);
+                        output = GroupBy.getOutputDataFrame(values, group);
                     }
 
                     Value[] keyValues = values.getRecord(i);
-                    Value[] rowValues = new Value[group.getColCount() + values.getColCount()];
-
-                    System.arraycopy(keyValues, 0, rowValues, 0, keyValues.length);
-
-                    for (int j = 0; j < group.size(); j++) {
-                        Value[] groupValues = group.getRecord(j);
-                        System.arraycopy(groupValues, 0, rowValues, keyValues.length, groupValues.length);
-                        output.addRecord(rowValues);
-
-                    }
-
+                    GroupBy.addGroup(output, keyValues, group);
 
                 }
 
@@ -654,28 +645,11 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
         }
 
-        private DataFrame getOutputDataFrame(DataFrame group) {
-            DataFrame output;
-            Class<? extends Value>[] keyTypes = values.getTypes();
-            Class<? extends Value>[] dfTypes = group.getTypes();
-            Class<? extends Value>[] fullTypes = new Class[keyTypes.length + dfTypes.length];
 
-            System.arraycopy(keyTypes, 0, fullTypes, 0, keyTypes.length);
-            System.arraycopy(dfTypes, 0, fullTypes, keyTypes.length, dfTypes.length);
-
-            String[] keyNames = values.getNames();
-            String[] dfNames = group.getNames();
-            String[] fullNames = new String[keyNames.length + dfNames.length];
-
-            System.arraycopy(keyNames, 0, fullNames, 0, keyNames.length);
-            System.arraycopy(dfNames, 0, fullNames, keyNames.length, dfNames.length);
-
-            output = new DataFrame(fullNames, fullTypes);
-            return output;
-        }
 
         private void initGroups() throws DFApplyableException {
             DataFrame values;
+
             try (ResultSet rs = connection.executeQuery(String.format("select distinct %s from %s order by %s", groupby, tableName, groupby))) {
                 values = fromSelect(rs);
             } catch (SQLException e) {
@@ -684,6 +658,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
                 e.printStackTrace();
                 throw new DFApplyableException("Improperly formatted data" + e.getMessage());
             }
+
             String otherNames = String.join(",", other);
 
             groupedDF = new HashMap<>();

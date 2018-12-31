@@ -6,56 +6,23 @@ import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.Value;
 
 import java.util.HashSet;
+import java.util.Set;
 
-public class MaxApplyable implements Applyable {
+public class MaxApplyable extends ComparableApplyable {
 
-    @Override
-    public DataFrame apply(DataFrame df) throws DFApplyableException {
-        DataFrame output = new DataFrame(df.getNames(), df.getTypes());
+    protected void comparison(Value[] optimal, Value[] tested, Set<Integer> banned) {
+        for (int kolumna = 0; kolumna < optimal.length; kolumna++) {
 
-        HashSet<Integer> bannedColumns = new HashSet<>();
-        try {
-        int size = df.size();
-        if (size > 0) {
-            Value[] max = df.getRecord(0);
+            if (banned.contains(kolumna))
+                continue;
 
-            for (int i = 1; i < size; i++) {
-                Value[] row = df.getRecord(i);
+            try {
 
-                for (int kolumna = 0; kolumna < max.length; kolumna++) {
-
-                    if (bannedColumns.contains(kolumna))
-                        continue;
-
-                    try {
-                        if (row[kolumna].gte(max[kolumna]))
-                            max[kolumna] = row[kolumna];
-                    } catch (UnsupportedOperationException ignored) {
-                        bannedColumns.add(kolumna);
-                    }
-                }
-
+                if (tested[kolumna].gte(optimal[kolumna]))
+                    optimal[kolumna] = tested[kolumna];
+            } catch (UnsupportedOperationException ignored) {
+                banned.add(kolumna);
             }
-            output.addRecord(max);
         }
-
-            if (bannedColumns.size() == output.getColCount())
-            throw new DFApplyableException("no comparable Columns in Dataframe");
-
-        String[] output_colnames = output.getNames();
-            String[] colnames = new String[output.getColCount() - bannedColumns.size()];
-
-        for (int i = 0, j = 0; i < output_colnames.length; i++) {
-            if (!bannedColumns.contains(i))
-                colnames[j++] = output_colnames[i];
-        }
-
-            return output.get(colnames, false);
-
-        } catch (DFColumnTypeException | CloneNotSupportedException e) {
-            throw new DFApplyableException(e.getMessage());//todo: Applyable Type error
-        }
-
-
     }
 }

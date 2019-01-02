@@ -3,6 +3,7 @@ import lab0.dataframe.exceptions.DFApplyableException;
 import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.exceptions.DFValueBuildException;
 import lab0.dataframe.DataFrameThreaded;
+import lab0.dataframe.groupby.GroupBy;
 import lab0.dataframe.values.*;
 
 import java.io.IOException;
@@ -28,45 +29,129 @@ class TestMain {
 //        System.out.println(Arrays.toString(db.getRecord(i)));
 //        }
 //        DataFrame db = new DataFrame("city.csv",new Class[]{IntegerValue.class,StringValue.class,StringValue.class,StringValue.class,IntegerValue.class});
-        DataFrame dbA = null, dbB = null;
-        final int N = 4000;
+        DataFrame db = null;
 
-//        for (int j = 0; j < 4; j++) {
-//            ExecutorService threadPool = Executors.newFixedThreadPool(10);//Executors.newWorkStealingPool(10);
-//            long B = System.currentTimeMillis();
-//            for (int i = 0; i < N; i++)
-//                dbB = new DataFrame("city.csv", new Class[]{IntegerValue.class, StringValue.class, StringValue.class, StringValue.class, IntegerValue.class});
-//            System.out.printf("B %3.2f  ", ((System.currentTimeMillis() - B) / (float) N));
-//            long A = System.currentTimeMillis();
-//            for (int i = 0; i < N; i++)
-//                dbA = new DataFrameThreaded(threadPool, "city.csv", new Class[]{IntegerValue.class, StringValue.class, StringValue.class, StringValue.class, IntegerValue.class});
-//            System.out.printf("A %3.2f\n", ((System.currentTimeMillis() - A) / (float) N));
+        ExecutorService threadPoolC = Executors.newWorkStealingPool();
+//                ExecutorService threadPoolC = Executors.newWorkStealingPool(4);
+//        threadPoolA.shutdown();
+        //Executors.newWorkStealingPool(10);
+        String name = null;
+
+        switch (argv[0]) {
+            case "B":
+                db = new DataFrame("test/testData/ultimate/ultimate.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+                name = "single";
+                break;
+            case "A":
+                db = new DataFrameThreaded(threadPoolC, "test/testData/ultimate/ultimate.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+                name = "multi";
+                break;
+
 //            threadPool.shutdown();
-//        }
+//            long C = System.currentTimeMillis();
+//            for (int i = 0; i < 1; i++)
+////                dbC = new DataFrameThreaded(threadPoolC, "city.csv", new Class[]{IntegerValue.class, StringValue.class, StringValue.class, StringValue.class, IntegerValue.class});
+//                dbC = new DataFrameThreaded(threadPoolC, "test/testData/ultimate/ultimate.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+//            System.out.printf("C %3.2f\n", ((System.currentTimeMillis() - C) / (float) 2));
+        }
 
-        System.out.println("GroupBy");
-        for (int j = 0; j < 4; j++) {
+        final int N = 2;
+        Random r = new Random();
+        System.out.println("GetRecord");
+        for (int j = 0; j < 6; j++) {
+            int col = r.nextInt(db.getColCount() - 2) + 1;
+            int Cc = db.getColCount();
+//            String[] s = new String[col];
+//            for (int i = 0; i < col; i++) {
+//                s[i]=dbA.getNames()[r.nextInt(Cc)];
+//            }
+            String[] s = new String[1];
+//            s[0]="CountryCode";
+            s[0] = "id";
+            System.out.print("\n" + Arrays.toString(s));
+
             long B = System.currentTimeMillis();
+            for (int i = 0; i < N; i++) {
+                GroupBy gB = db.groupBy(s);
+//                gB.max();
+            }
+            System.out.printf(name + " %3.2f  ", ((System.currentTimeMillis() - B) / (float) N));
+//[id]single 7139.00
+//[id]single 8971.00
+//[id]single 9063.50
+//[id]single 8906.50
+//[id]single 8866.00
+//[id]single 8912.50
+            //4 fixed
+//[id]multi 12609.00
+//[id]multi 13969.50
+//[id]multi 14076.50
+//[id]multi 14076.00
+//[id]multi 13798.00
+//[id]multi 13899.50
+            //64 fixed
+//[id]multi 11757.50
+//[id]multi 14158.00
+//[id]multi 13451.50
+//[id]multi 13271.50
+//[id]multi 13137.00
+//[id]multi 13451.00
+            //1 fixed
+//[id]multi 14558.50
+//[id]multi 14973.50
+//[id]multi 15043.00
+//[id]multi 15570.50
+//[id]multi 15159.50
+//[id]multi 16705.50
+
+//cached
+//[id]multi 13729.50
+//[id]multi 14619.00
+//[id]multi 13373.50
+//[id]multi 13548.50
+//[id]multi 13236.50
+//[id]multi 13299.00
+//if DataFrmae
+//[id]multi 5101.00
+//[id]multi 7173.50
+//[id]multi 7686.50
+//[id]multi 7873.00
+//[id]multi 7323.50
+//[id]multi 7304.50
+        }
+
+//        DataFrame gA = dbA.groupBy("CountryCode").max();
+//        DataFrame gB = dbB.groupBy("CountryCode").max();
+//        DataFrame gC = dbC.groupBy("CountryCode").max();
+//
+//        System.out.println(gA.equals(gB));
+//        System.out.println(gA.equals(gC));
+//        System.out.println(gB.equals(gC));
+
+//        threadPoolA.shutdown();
+        threadPoolC.shutdown();
+//        System.out.println("GroupBy");
+//        for (int j = 0; j < 4; j++) {
+//            long B = System.currentTimeMillis();
 //            for (int i = 0; i < 2; i++)
 //                dbB = new DataFrame("test/testData/multi/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
 //            System.out.printf("B %3.2f %d ", ((System.currentTimeMillis() - B) / (float) N),dbB.size());
-
-            ExecutorService threadPool = Executors.newFixedThreadPool(20);//Executors.newWorkStealingPool(10);
-            long A = System.currentTimeMillis();
-            for (int i = 0; i < 2; i++)
-                dbA = new DataFrameThreaded(threadPool, "test/testData/multi/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
-            System.out.printf("A %3.2f %d", ((System.currentTimeMillis() - A) / (float) N), dbA.size());
-            threadPool.shutdown();
-
-            threadPool = Executors.newWorkStealingPool(10);
-            long C = System.currentTimeMillis();
-            for (int i = 0; i < 2; i++)
-                dbA = new DataFrameThreaded(threadPool, "test/testData/multi/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
-            System.out.printf("C %3.2f %d\n", ((System.currentTimeMillis() - C) / (float) N), dbA.size());
-            threadPool.shutdown();
-        }
+//
+//            ExecutorService threadPool = Executors.newFixedThreadPool(10);//Executors.newWorkStealingPool(10);
+//            long A = System.currentTimeMillis();
+//            for (int i = 0; i < 2; i++)
+//                dbA = new DataFrameThreaded(threadPool, "test/testData/multi/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+//            System.out.printf("A %3.2f %d", ((System.currentTimeMillis() - A) / (float) N), dbA.size());
+//            threadPool.shutdown();
+//
+//            threadPool = Executors.newWorkStealingPool(10);
+//            long C = System.currentTimeMillis();
+//            for (int i = 0; i < 2; i++)
+//                dbA = new DataFrameThreaded(threadPool, "test/testData/multi/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+//            System.out.printf("C %3.2f %d\n", ((System.currentTimeMillis() - C) / (float) N), dbA.size());
+//            threadPool.shutdown();
+//        }
         //        DataFrameThreaded db1 = new DataFrameThreaded(threadPool,db);
-        Random r = new Random();
 //        System.out.println(db);
 //        long cur = System.currentTimeMillis();
 //        for (int i = 0; i < N; i++) {

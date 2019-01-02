@@ -239,7 +239,7 @@ public class DataFrame {
 
     public GroupBy groupBy(String... colname) throws CloneNotSupportedException {
 
-        Hashtable<ValueGroup, DataFrame> storage = new Hashtable<>();
+        Map<ValueGroup, DataFrame> storage = new HashMap<>();
         DataFrame keys = get(colname, false);
         try {
             for (int i = 0; i < size(); i++) {
@@ -440,6 +440,9 @@ public class DataFrame {
 
                 for (int i = 0; i < size(); i++) {
                     if (!k.get(i).eq(get(i))) {
+                        System.out.println("i = " + i);
+                        System.out.println("k.get(i) = " + k.get(i));
+                        System.out.println("get(i) = " + get(i));
                         return false;
                     }
                 }
@@ -473,16 +476,25 @@ public class DataFrame {
     protected class ValueGroup implements Comparable<ValueGroup> {
         private Value[] id;
 
+        @Override
+        public String toString() {
+            return Arrays.toString(id);
+        }
+
         protected ValueGroup(Value[] key) {
             id = key;
+        }
+
+        public Value[] getId() {
+            return id;
         }
 
         @Override
         public boolean equals(Object o) {
             if (o instanceof ValueGroup) {
                 ValueGroup other = (ValueGroup) o;
-                if (id.length != other.id.length)
-                    return false;
+//                if (id.length != other.id.length)
+//                    return false;
                 return Arrays.deepEquals(id, other.id);
             } else
                 return false;
@@ -491,7 +503,7 @@ public class DataFrame {
         @Override
         public int hashCode() {
 
-            return Arrays.hashCode(id);
+            return Arrays.deepHashCode(id);
         }
 
         @Override
@@ -595,7 +607,7 @@ public class DataFrame {
                     //inicjalizacja DataFrame output
                     //tak żeby zawierał otpowiednie typy kolunm na wyjściu
                     if (output == null) {
-                        output = GroupBy.getOutputDataFrame(id_values, group);
+                        output = GroupBy.getOutputDataFrame(id_values.getTypes(), id_values.getNames(), group.getTypes(), group.getNames());
                     }
 
                     //przepisanie wartości z temp, jeżelicoś zawiera

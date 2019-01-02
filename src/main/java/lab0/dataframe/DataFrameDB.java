@@ -629,7 +629,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
                     DataFrame group = apply.apply(groupedDF.get(i));
 
                     if (output == null) {
-                        output = GroupBy.getOutputDataFrame(values, group);
+                        output = GroupBy.getOutputDataFrame(values.getTypes(), values.getNames(), group.getTypes(), group.getNames());
                     }
 
                     Value[] keyValues = values.getRecord(i);

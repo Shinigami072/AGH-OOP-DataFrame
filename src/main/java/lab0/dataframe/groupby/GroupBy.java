@@ -32,24 +32,19 @@ public interface GroupBy {
 
     DataFrame apply(Applyable apply) throws DFApplyableException;
 
-    static DataFrame getOutputDataFrame(DataFrame keys, DataFrame group) {
-        DataFrame output;
-        Class<? extends Value>[] keyTypes = keys.getTypes();
-        Class<? extends Value>[] dfTypes = group.getTypes();
+    static DataFrame getOutputDataFrame(Class<? extends Value>[] keyTypes, String[] keyNames, Class<? extends Value>[] dfTypes, String[] dfNames) {
         Class<? extends Value>[] fullTypes = new Class[keyTypes.length + dfTypes.length];
 
         System.arraycopy(keyTypes, 0, fullTypes, 0, keyTypes.length);
         System.arraycopy(dfTypes, 0, fullTypes, keyTypes.length, dfTypes.length);
 
-        String[] keyNames = keys.getNames();
-        String[] dfNames = group.getNames();
         String[] fullNames = new String[keyNames.length + dfNames.length];
 
         System.arraycopy(keyNames, 0, fullNames, 0, keyNames.length);
         System.arraycopy(dfNames, 0, fullNames, keyNames.length, dfNames.length);
 
-        output = new DataFrame(fullNames, fullTypes);
-        return output;
+        return new DataFrame(fullNames, fullTypes);
+
     }
 
     static void addGroup(DataFrame output, Value[] keyValues, DataFrame group) throws DFColumnTypeException {

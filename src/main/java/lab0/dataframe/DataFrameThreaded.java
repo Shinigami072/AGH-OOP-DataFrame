@@ -1,6 +1,7 @@
 package lab0.dataframe;
 
 import lab0.dataframe.exceptions.*;
+import lab0.dataframe.groupby.Applyable;
 import lab0.dataframe.groupby.GroupBy;
 import lab0.dataframe.values.Value;
 
@@ -276,130 +277,93 @@ public class DataFrameThreaded extends DataFrame {
         }
     }
 
-    @Override
-    protected void loadData(BufferedReader br) throws IOException, DFValueBuildException {
-        String temp;
-        String[] strLine;
-
-        BlockingQueue<String[]> processingQueue = new LinkedBlockingQueue<>();
-
-        Future<Object> builder = executorService.submit(new Callable<Object>() {
-            @Override
-            public Object call() throws DFColumnTypeException, InterruptedException {
-
-                LinkedList<Value[]> values = new LinkedList<>();
-
-                Value.ValueBuilder[] builders = new Value.ValueBuilder[columns.length];
-                for (int i = 0; i < columns.length; i++) {
-                    builders[i] = Value.builder(columns[i].typ);
-                }
-                AtomicBoolean lastLock = null;
-                Value[] tempValues = new Value[columns.length];
-                int RowNum = 0;
-                do {
-                    String[] strings = processingQueue.take();
-
-                    AtomicBoolean prevLock = lastLock;
-                    AtomicBoolean nextLock = new AtomicBoolean(false);
-
-                    if (strings.length == 0)
-                        break;
-
-                    int finalRowNum = RowNum;
-                    executorService.submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                for (int i = 0; i < columns.length; i++) {
-                                    tempValues[i] = builders[i].build(strings[i]);
-
-                                }
-                            } catch (DFValueBuildException e) {
-                                e.printStackTrace();
-                            }
-                            synchronized (nextLock) {
-                                if (prevLock != null)
-                                    synchronized (prevLock) {
-                                        try {
-                                            if (!prevLock.get())
-                                                prevLock.wait();
-
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-
-
-                                synchronized (values) {
-                                    values.add(tempValues);
-                                }
-                                nextLock.set(true);
-                                nextLock.notify();
-                            }
-
-                        }
-
-                    });
-
-                    RowNum++;
-                    lastLock = nextLock;
-//                        if (values.size()>512*10) {
-//                            Collection<Value[]> valuesCopy= (Collection<Value[]>) values.clone();
-//                            executorService.submit(new Callable<Object>() {
-//                                @Override
-//                                public Object call() throws DFColumnTypeException {
-//                                    addAllRecords(valuesCopy);
-//                                    return null;
-//                                }
-//                            });
+//    @Override
+//    protected void loadData(BufferedReader br) throws IOException, DFValueBuildException {
+//        String temp;
+//        String[] strLine;
 //
-//                            values.clear();
-//                        }
-                } while (true);
-//                catch (DFValueBuildException e) {
-//                    e.printStackTrace();
+//        BlockingQueue<String[]> processingQueue = new LinkedBlockingQueue<>();
+//
+//        Future<Object> builder = executorService.submit(new Callable<Object>() {
+//            @Override
+//            public Object call() throws DFColumnTypeException, InterruptedException {
+//
+//                LinkedList<Value[]> values = new LinkedList<>();
+//
+//                Value.ValueBuilder[] builders = new Value.ValueBuilder[columns.length];
+//                for (int i = 0; i < columns.length; i++) {
+//                    builders[i] = Value.builder(columns[i].typ);
 //                }
-
-                synchronized (lastLock) {
-//                    while (values.size() < RowNum) {
-//                        values.wait();
+//                AtomicBoolean lastLock = null;
+//                int RowNum = 0;
+//                do {
+//                    String[] strings = processingQueue.take();
+//
+//                    if (strings.length == 0)
+//                        break;
+//
+//                    Value[] tempValues = new Value[columns.length];
+////                    List<Callable<Value>> list = new ArrayList<>(strings.length);
+//                    for (int i = 0; i < strings.length; i++) {
+//                        int Fi = i;
+////                        list.add(new Callable<Value>() {
+////                            @Override
+////                            public Value call() throws Exception {
+//                        try {
+//                            tempValues[Fi] = builders[Fi].build(strings[Fi]);
+//                        } catch (DFValueBuildException e) {
+//                            e.printStackTrace();
+//                        }
+////                                return tempValues[Fi];
+////                            }
+////                        });
 //                    }
-                    if (!lastLock.get())
-                        lastLock.wait();
-                }
-                addAllRecords(values);
-                return null;
-            }
-        });
-
-
-        try {
-            int i = 0;
-            while ((temp = br.readLine()) != null) {
-                strLine = temp.split(",");
-                if (strLine.length == columns.length)
-                    processingQueue.put(strLine);
-                else
-                    continue;
-                i++;
-            }
-            processingQueue.put(new String[0]);
-        } catch (InterruptedException e) {
-            builder.cancel(true);
-            e.printStackTrace();
-        }
-
-        try {
-            builder.get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-    }
+////                    executorService.invokeAll(list);
+//                    values.add(tempValues);
+//                    RowNum++;
+////                    addRecord(tempValues);
+//
+//                } while (true);
+////                catch (DFValueBuildException e) {
+////                    e.printStackTrace();
+////                }
+//
+//                addAllRecords(values);
+//                return null;
+//            }
+//        });
+//
+//
+//        try {
+//            int i = 0;
+//            while ((temp = br.readLine()) != null) {
+//                strLine = temp.split(",");
+//                if (strLine.length == columns.length)
+//                    processingQueue.put(strLine);
+//                else
+//                    continue;
+//                i++;
+//            }
+//            processingQueue.put(new String[0]);
+//        } catch (InterruptedException e) {
+//            builder.cancel(true);
+//            e.printStackTrace();
+//        }
+//
+//        try {
+//            builder.get();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @Override
     public DataFrame get(String[] cols, boolean copy) throws DFZeroLengthCreationException, CloneNotSupportedException {
+        if (!copy || cols.length < 2)
+            return super.get(cols, copy);
+
 
         List<Callable<Column>> callables = new ArrayList<>(getColCount());
         for (int i = 0; i < cols.length; i++) {
@@ -407,10 +371,7 @@ public class DataFrameThreaded extends DataFrame {
             callables.add(new Callable<Column>() {
                 @Override
                 public Column call() throws CloneNotSupportedException {
-                    if (copy) {
-                        return get(cols[Fi]).copy();
-                    } else
-                        return get(cols[Fi]);
+                    return get(cols[Fi]).copy();
                 }
             });
         }
@@ -418,43 +379,43 @@ public class DataFrameThreaded extends DataFrame {
         return convertCallableToDataFrame(callables, executorService);
     }
 
-    @Override
-    public Value[] getRecord(int index) {
-        if (index < 0 || index > size())
-            throw new DFIndexOutOfBounds("Out of bounds: " + index);
-
-
-        Value[] row = new Value[getColCount()];
-
-        //split search into different threads
-        List<Callable<Value>> callables = new ArrayList<>(getColCount());
-        for (int i = 0; i < getColCount(); i++) {
-            int Fi = i;
-            callables.add(new Callable<Value>() {
-                @Override
-                public Value call() throws DFColumnTypeException {
-                    return columns[Fi].get(index);
-                }
-            });
-        }
-
-
-        //unwrapping Exceptions
-        try {
-
-            List<Future<Value>> values = new ArrayList<>(callables.size());
-            for (int i = 0; i < callables.size(); i++) {
-                values.add(executorService.submit(callables.get(i)));
-            }
-            for (int i = 0; i < getColCount(); i++) {
-                row[i] = values.get(i).get();
-            }
-
-            return row;
-        } catch (ExecutionException | InterruptedException e) {
-            throw new DFIndexOutOfBounds(e.getMessage());
-        }
-    }
+//    @Override
+//    public Value[] getRecord(int index) {
+//        if (index < 0 || index > size())
+//            throw new DFIndexOutOfBounds("Out of bounds: " + index);
+//
+//
+//        Value[] row = new Value[getColCount()];
+//
+//        //split search into different threads
+//        List<Callable<Value>> callables = new ArrayList<>(getColCount());
+//        for (int i = 0; i < getColCount(); i++) {
+//            int Fi = i;
+//            callables.add(new Callable<Value>() {
+//                @Override
+//                public Value call() throws DFColumnTypeException {
+//                    return columns[Fi].get(index);
+//                }
+//            });
+//        }
+//
+//
+//        //unwrapping Exceptions
+//        try {
+//
+//            List<Future<Value>> values = new ArrayList<>(callables.size());
+//            for (int i = 0; i < callables.size(); i++) {
+//                values.add(executorService.submit(callables.get(i)));
+//            }
+//            for (int i = 0; i < getColCount(); i++) {
+//                row[i] = values.get(i).get();
+//            }
+//
+//            return row;
+//        } catch (ExecutionException | InterruptedException e) {
+//            throw new DFIndexOutOfBounds(e.getMessage());
+//        }
+//    }
 
     public void addAllRecords(Collection<Value[]> rows) throws DFColumnTypeException, DFDimensionException {
 
@@ -473,12 +434,7 @@ public class DataFrameThreaded extends DataFrame {
                     //exception handling
                     int i = 0;
                     Iterator<Value[]> it = rows.iterator();
-                    Value[] row;
-                    while (it.hasNext()) {
-
-                        synchronized (rows) {
-                            row = it.next();
-                        }
+                    for (Value[] row : rows) {
 
                         if (row.length != colCount) {
                             throw new DFDimensionException("Row " + (size + i) + "mismatched length");
@@ -518,6 +474,9 @@ public class DataFrameThreaded extends DataFrame {
     //todo: interrupts everywhere
     @Override
     public DataFrame iloc(int from, int to) throws DFColumnTypeException {
+        if (from - to < 500)
+            return super.iloc(from, to);
+
         checkBounds(from, to);
 
         //copy columns in parallel
@@ -543,79 +502,183 @@ public class DataFrameThreaded extends DataFrame {
     }
 
     @Override
-    public GroupBy groupBy(String... colname) throws CloneNotSupportedException {
+    public GroupBy groupBy(String... colname) {
 
-        Hashtable<ValueGroup, DataFrame> storage = new Hashtable<>();
+        Map<ValueGroup, DataFrame> storage = new TreeMap<>();
 
-        Hashtable<ValueGroup, BlockingQueue<Integer>> proactive = new Hashtable<>();
-        DataFrame keys = get(colname, false);
-        List<Future<Boolean>> futures = new LinkedList<>();
-        class Adder implements Callable<Boolean> {
+        Map<ValueGroup, Queue<Integer>> builderQueues = new ConcurrentHashMap<>(64);
+
+        DataFrame keys = null;
+
+        try {
+            keys = get(colname, false);
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        Collection<Callable<Pair<ValueGroup, DataFrame>>> futures = new LinkedList<>();
+
+        class Adder implements Callable<Pair<ValueGroup, DataFrame>> {
             private final ValueGroup key;
             private DataFrame target;
+            private final Collection<Integer> queue;
 
-            Adder(ValueGroup key) {
+            Adder(ValueGroup key, Collection<Integer> queue) {
                 this.key = key;
+                this.queue = queue;
             }
 
             @Override
-            public Boolean call() throws DFColumnTypeException, InterruptedException {
-                BlockingQueue<Integer> queue = proactive.get(key);
-                Integer index;
-                while ((index = queue.take()) >= 0) {
-                    if (index < 0)
-                        break;
+            public Pair<ValueGroup, DataFrame> call() throws DFColumnTypeException {
+                for (int index : queue) {
 
-                    synchronized (proactive) {
-                        Value[] row = getRecord(index);
+                    Value[] row = getRecord(index);
 
-                        if (target == null)
-                            target = new DataFrameSparse(getNames(), row);
+                    if (target == null)
+                        target = new DataFrame(getNames(), getTypes());//new DataFrameSparse(getNames(), row);
 
-                        target.addRecord(row);
-                    }
+                    target.addRecord(row);
                 }
-                storage.put(key, target);
-                return true;
+
+//                storage.put(key, target);
+                return new Pair<>(key, target);
             }
         }
 
-        for (int i = 0; i < size(); i++) {
-            ValueGroup key = new ValueGroup(keys.getRecord(i));
 
-            BlockingQueue<Integer> queue = proactive.get(key);
-            if (queue == null) {
-                queue = new LinkedBlockingQueue<>();
-                proactive.put(key, queue);
-                futures.add(executorService.submit(new Adder(key)));
+        DataFrame finalKeys = keys;
+        class Classifier implements Callable<Object> {
+
+            final int start;
+            final int end;
+
+            Classifier(int begin, int end) {
+                this.start = begin;
+                this.end = end;
             }
 
-            try {
-                queue.put(i);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+            @Override
+            public Object call() throws InterruptedException {
+                if (start - end > 1000) {
+                    int mid = (start + end) / 2;
+                    executorService.invokeAll(Arrays.asList(new Classifier(start, mid), new Classifier(mid + 1, end)));
+                    return null;
+                }
 
-        for (BlockingQueue<Integer> queue : proactive.values()) {
-            try {
-                queue.put(-1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                for (int i = start; i < end; i++) {
+//                    assert finalKeys != null;
+                    ValueGroup key = new ValueGroup(finalKeys.getRecord(i));
+
+//                    Queue<Integer> queue = builderQueues.computeIfAbsent(key, k -> new LinkedList<>());
+//                    queue.offer(i);
+
+                }
+                return null;
             }
         }
 
         try {
-            for (Future<Boolean> f : futures) {
-                f.get();
+            executorService.invokeAll(Collections.singletonList(new Classifier(0, size())));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+//        for (int i = 0; i < size(); i++) {
+//            ValueGroup key = new ValueGroup(finalKeys.getRecord(i));
+//
+//            Queue<Integer> queue = builderQueues.computeIfAbsent(key, k -> new LinkedList<>());
+//            queue.offer(i);
+//
+//        }
+
+
+        for (ValueGroup key : builderQueues.keySet()) {
+            futures.add(new Adder(key, builderQueues.get(key)));
+        }
+
+
+        try {
+            List<Future<Pair<ValueGroup, DataFrame>>> dfs = executorService.invokeAll(futures);
+            for (Future<Pair<ValueGroup, DataFrame>> f : dfs) {
+                Pair<ValueGroup, DataFrame> p = f.get();
+                storage.put(p.first, p.second);
             }
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
 
-        return new Grupator4000(new TreeMap<>(storage).values(), colname, keys.getTypes());//todo - czech perfofmans pls
+        return new GrupatorThreaded(storage, colname, keys.getTypes());//todo - czech perfofmans pls
 
     }
+
+    class GrupatorThreaded implements GroupBy {
+
+        Map<ValueGroup, DataFrame> groups;
+        String[] datanames;
+
+        String[] keynames;
+        Class<? extends Value>[] keyTypes;
+
+        GrupatorThreaded(Map<ValueGroup, DataFrame> groups, String[] keynames, Class<? extends Value>[] keyTypes) {
+            this.groups = groups;
+            this.keynames = keynames;
+            this.keyTypes = keyTypes;
+
+//            Set<String> datanames = new HashSet<String>(Arrays.asList(getNames()));
+//            datanames.removeAll(Arrays.asList(keynames));
+//
+//            this.datanames = datanames.toArray(new String[0]);
+        }
+
+        @Override
+        public DataFrame apply(Applyable apply) throws DFApplyableException {
+            List<Callable<DataFrame>> groupCalculator = new ArrayList<>(groups.size());
+            for (ValueGroup key : groups.keySet()) {
+                groupCalculator.add(new Callable<DataFrame>() {
+
+                    @Override
+                    public DataFrame call() throws DFApplyableException, CloneNotSupportedException {
+
+                        DataFrame group = groups.get(key);
+                        DataFrame cutDown = group.get(datanames, false);
+
+                        return apply.apply(cutDown);
+
+
+                    }
+                });
+            }
+
+
+            try {
+                List<Future<DataFrame>> calculated = executorService.invokeAll(groupCalculator);
+                SortedSet<ValueGroup> k = new TreeSet<>(groups.keySet());
+                Iterator<ValueGroup> keys = k.iterator();
+                DataFrame output = null;
+
+                for (Future<DataFrame> f : calculated) {
+                    ValueGroup key = keys.next();
+                    DataFrame group = f.get();
+                    if (output == null)
+                        output = GroupBy.getOutputDataFrame(keyTypes, keynames, group.getTypes(), group.getNames());
+
+                    GroupBy.addGroup(output, key.getId(), group);
+                }
+                return output;
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (DFColumnTypeException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+    }
+
 }

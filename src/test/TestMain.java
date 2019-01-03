@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.TreeSet;
 import java.util.concurrent.*;
 
 class TestMain {
@@ -31,21 +32,30 @@ class TestMain {
 //        DataFrame db = new DataFrame("city.csv",new Class[]{IntegerValue.class,StringValue.class,StringValue.class,StringValue.class,IntegerValue.class});
         DataFrame db = null;
         System.out.println(Runtime.getRuntime().availableProcessors());
-//        ExecutorService threadPoolC = Executors.newWorkStealingPool(4);
-        ExecutorService threadPoolC = Executors.newFixedThreadPool(4);
+        ExecutorService threadPoolC = Executors.newWorkStealingPool(4);
+//        ExecutorService threadPoolC = Executors.newFixedThreadPool(4);
 //        threadPoolA.shutdown();
         //Executors.newWorkStealingPool(10);
         String name = null;
-
-        switch (argv[0]) {
-            case "B":
-                db = new DataFrame("test/testData/ultimate/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
-                name = "single";
-                break;
-            case "A":
-                db = new DataFrameThreaded(threadPoolC, "test/testData/ultimate/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
-                name = "multi";
-                break;
+        String path = "test/testData/ultimate/ultimate11.csv";
+        String id = argv[0];
+        do {
+            System.out.print("\nloading");
+            switch (id) {
+                case "B":
+                    name = "single";
+                    System.out.print(" " + name + ".");
+                    System.out.print(".");
+                    db = new DataFrame(path, new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+                    System.out.print(".");
+                    break;
+                case "A":
+                    name = "multi";
+                    System.out.print(" " + name + ".");
+                    System.out.print(".");
+                    db = new DataFrameThreaded(threadPoolC, path, new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+                    System.out.print(".");
+                    break;
 
 //            threadPool.shutdown();
 //            long C = System.currentTimeMillis();
@@ -53,50 +63,58 @@ class TestMain {
 ////                dbC = new DataFrameThreaded(threadPoolC, "city.csv", new Class[]{IntegerValue.class, StringValue.class, StringValue.class, StringValue.class, IntegerValue.class});
 //                dbC = new DataFrameThreaded(threadPoolC, "test/testData/ultimate/ultimate.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
 //            System.out.printf("C %3.2f\n", ((System.currentTimeMillis() - C) / (float) 2));
-        }
+            }
 
-        final int N = 2;
-        Random r = new Random();
-        System.out.println("GetRecord");
-        for (int j = 0; j < 6; j++) {
-            int col = r.nextInt(db.getColCount() - 2) + 1;
-            int Cc = db.getColCount();
+            final int N = 10;
+            Random r = new Random();
+            System.out.println("\nloaded");
+            for (int j = 0; j < 4; j++) {
+                int col = r.nextInt(db.getColCount() - 2) + 1;
+                int Cc = db.getColCount();
 //            String[] s = new String[col];
 //            for (int i = 0; i < col; i++) {
 //                s[i]=dbA.getNames()[r.nextInt(Cc)];
 //            }
-            String[] s = new String[1];
+                String[] s = new String[1];
 //            s[0]="CountryCode";
-            s[0] = "id";
-            System.out.print("\n" + Arrays.toString(s));
+                s[0] = "id";
+                System.out.print("\n" + Arrays.toString(s));
+//[id]single 7590.80
+//[id]single 7997.40
+//[id]single 8030.70
+//[id]single 8346.90
 
-            long B = System.currentTimeMillis();
-            for (int i = 0; i < N; i++) {
-                GroupBy gB = db.groupBy(s);
+                long B = System.currentTimeMillis();
+                for (int i = 0; i < N; i++) {
+                    GroupBy gB = db.groupBy(s);
 //                gB.max();
+                }
+                System.out.printf(name + " %3.2f  ", ((System.currentTimeMillis() - B) / (float) N));
             }
-            System.out.printf(name + " %3.2f  ", ((System.currentTimeMillis() - B) / (float) N));
+        } while (id.equals("B") && (id = "A").equals("A"));
+        threadPoolC.shutdown();
+
 //[id]single 7139.00
 //[id]single 8971.00
 //[id]single 9063.50
 //[id]single 8906.50
 //[id]single 8866.00
 //[id]single 8912.50
-            //4 fixed
+        //4 fixed
 //[id]multi 12609.00
 //[id]multi 13969.50
 //[id]multi 14076.50
 //[id]multi 14076.00
 //[id]multi 13798.00
 //[id]multi 13899.50
-            //64 fixed
+        //64 fixed
 //[id]multi 11757.50
 //[id]multi 14158.00
 //[id]multi 13451.50
 //[id]multi 13271.50
 //[id]multi 13137.00
 //[id]multi 13451.00
-            //1 fixed
+        //1 fixed
 //[id]multi 14558.50
 //[id]multi 14973.50
 //[id]multi 15043.00
@@ -118,7 +136,7 @@ class TestMain {
 //[id]multi 7873.00
 //[id]multi 7323.50
 //[id]multi 7304.50
-        }
+    }
 
 //        DataFrame gA = dbA.groupBy("CountryCode").max();
 //        DataFrame gB = dbB.groupBy("CountryCode").max();
@@ -129,7 +147,6 @@ class TestMain {
 //        System.out.println(gB.equals(gC));
 
 //        threadPoolA.shutdown();
-        threadPoolC.shutdown();
 //        System.out.println("GroupBy");
 //        for (int j = 0; j < 4; j++) {
 //            long B = System.currentTimeMillis();
@@ -151,7 +168,7 @@ class TestMain {
 //            System.out.printf("C %3.2f %d\n", ((System.currentTimeMillis() - C) / (float) N), dbA.size());
 //            threadPool.shutdown();
 //        }
-        //        DataFrameThreaded db1 = new DataFrameThreaded(threadPool,db);
+    //        DataFrameThreaded db1 = new DataFrameThreaded(threadPool,db);
 //        System.out.println(db);
 //        long cur = System.currentTimeMillis();
 //        for (int i = 0; i < N; i++) {
@@ -265,7 +282,7 @@ class TestMain {
 ////        System.out.println(group.std());
 
 
-    }
-
 }
+
+
 

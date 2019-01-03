@@ -505,6 +505,7 @@ public class DataFrameThreaded extends DataFrame {
     public GroupBy groupBy(String... colname) {
 
         Map<ValueGroup, DataFrame> storage = new ConcurrentHashMap<>();
+//        Map<ValueGroup, List<Integer>> storage = new ConcurrentHashMap<>();
         DataFrame keys = null;
 
         try {
@@ -525,8 +526,8 @@ public class DataFrameThreaded extends DataFrame {
             }
 
             @Override
-            public Object call() throws InterruptedException {
-                if (start - end > 25_000) {
+            public Object call() throws InterruptedException, DFColumnTypeException {
+                if (end - start > 100) {
                     int mid = (start + end) / 2;
                     executorService.invokeAll(Arrays.asList(new Classifier(start, mid), new Classifier(mid, end)));
                     return null;
@@ -540,13 +541,18 @@ public class DataFrameThreaded extends DataFrame {
 
                         //todo: dataframe view
                         DataFrame group = storage.computeIfAbsent(key, k -> new DataFrameSparse(getNames(), row));
-                        try {
-                            synchronized (group) {
+//                        List<Integer> group = storage.computeIfAbsent(key, k -> new ArrayList<>(end - start));
+//                        try {
+                        synchronized (group) {
+//                            if (row.length > 0) {
+//                                group.add(i);
+//                            }
+//                                getRecord(i);
                                 group.addRecord(row);
-                            }
-                        } catch (DFColumnTypeException e) {
-                            e.printStackTrace();
                         }
+//                        } catch (DFColumnTypeException e) {
+//                            e.printStackTrace();
+//                        }
 //                    Queue<Integer> queue = builderQueues.computeIfAbsent(key, k -> new LinkedList<>());
 //                    queue.offer(i);
 
@@ -558,20 +564,20 @@ public class DataFrameThreaded extends DataFrame {
 
         try {
             int size = size();
-            int wokrSize = 25_000;
+//            int wokrSize = 25_000;
 //            int mid=size/2;
 //            int halfMid=mid/2;
 //            executorService.invokeAll(Arrays.asList(new Classifier(0, halfMid),new Classifier(halfMid, mid),new Classifier(mid,mid+halfMid),new Classifier(mid+halfMid,size)));
-            List<Classifier> workers = new ArrayList<>(size / wokrSize);
-            for (int i = 0; i < size; i += wokrSize)
-                workers.add(new Classifier(i, Math.min(i + wokrSize, size)));
-            executorService.invokeAll(workers);
-//            executorService.invokeAll(Collections.singletonList(new Classifier(0,size)));
+//            List<Classifier> workers = new ArrayList<>(size / wokrSize);
+//            for (int i = 0; i < size; i += wokrSize)
+//                workers.add(new Classifier(i, Math.min(i + wokrSize, size)));
+//            executorService.invokeAll(workers);
+            executorService.invokeAll(Collections.singletonList(new Classifier(0, size)));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        return new GrupatorThreaded(storage, colname, keys.getTypes());//todo - czech perfofmans pls
+        return null;
+//        return new GrupatorThreaded(storage, colname, keys.getTypes());//todo - czech perfofmans pls
 
     }
 

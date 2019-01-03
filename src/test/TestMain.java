@@ -30,20 +30,20 @@ class TestMain {
 //        }
 //        DataFrame db = new DataFrame("city.csv",new Class[]{IntegerValue.class,StringValue.class,StringValue.class,StringValue.class,IntegerValue.class});
         DataFrame db = null;
-
-        ExecutorService threadPoolC = Executors.newWorkStealingPool();
-//                ExecutorService threadPoolC = Executors.newWorkStealingPool(4);
+        System.out.println(Runtime.getRuntime().availableProcessors());
+//        ExecutorService threadPoolC = Executors.newWorkStealingPool(4);
+        ExecutorService threadPoolC = Executors.newFixedThreadPool(4);
 //        threadPoolA.shutdown();
         //Executors.newWorkStealingPool(10);
         String name = null;
 
         switch (argv[0]) {
             case "B":
-                db = new DataFrame("test/testData/ultimate/ultimate.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+                db = new DataFrame("test/testData/ultimate/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
                 name = "single";
                 break;
             case "A":
-                db = new DataFrameThreaded(threadPoolC, "test/testData/ultimate/ultimate.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+                db = new DataFrameThreaded(threadPoolC, "test/testData/ultimate/groupby.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
                 name = "multi";
                 break;
 

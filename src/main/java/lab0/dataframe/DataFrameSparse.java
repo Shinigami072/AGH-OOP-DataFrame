@@ -287,6 +287,7 @@ public class DataFrameSparse extends DataFrame {
         public SparseColumn(SparseColumn source) {
             super(source.nazwa, source.typ);
             this.hidden = source.hidden;
+
             size = source.size;
             for (int i = 0; i < source.dane.size(); i++) {
                 COOValue v = (COOValue) (source.dane.get(i));

@@ -158,14 +158,14 @@ public class DataFrame {
     public void addRecord(Value... values) throws DFColumnTypeException, DFDimensionException {
         if (values.length != columns.length)
             throw new DFDimensionException(String.format("DF col %d , record length: %d", getColCount(), values.length));
-        for (int i = 0; i < columns.length; i++)
+        for (int i = 0; i < columns.length; i++)//todo: make this more performant
             if (!columns[i].typ.isInstance(values[i]))
                 throw new DFColumnTypeException(columns[i], values[i], i);
 
         int i = 0;
-        rowNumber++;
         for (Column k : columns)
             k.add(values[i++]);
+        rowNumber++;
 
     }
 

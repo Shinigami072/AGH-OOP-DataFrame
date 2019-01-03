@@ -504,10 +504,7 @@ public class DataFrameThreaded extends DataFrame {
     @Override
     public GroupBy groupBy(String... colname) {
 
-        Map<ValueGroup, DataFrame> storage = new TreeMap<>();
-
-        Map<ValueGroup, Queue<Integer>> builderQueues = new ConcurrentHashMap<>(64);
-
+        Map<ValueGroup, DataFrame> storage = new ConcurrentHashMap<>();
         DataFrame keys = null;
 
         try {
@@ -515,36 +512,6 @@ public class DataFrameThreaded extends DataFrame {
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
         }
-
-        Collection<Callable<Pair<ValueGroup, DataFrame>>> futures = new LinkedList<>();
-
-        class Adder implements Callable<Pair<ValueGroup, DataFrame>> {
-            private final ValueGroup key;
-            private DataFrame target;
-            private final Collection<Integer> queue;
-
-            Adder(ValueGroup key, Collection<Integer> queue) {
-                this.key = key;
-                this.queue = queue;
-            }
-
-            @Override
-            public Pair<ValueGroup, DataFrame> call() throws DFColumnTypeException {
-                for (int index : queue) {
-
-                    Value[] row = getRecord(index);
-
-                    if (target == null)
-                        target = new DataFrame(getNames(), getTypes());//new DataFrameSparse(getNames(), row);
-
-                    target.addRecord(row);
-                }
-
-//                storage.put(key, target);
-                return new Pair<>(key, target);
-            }
-        }
-
 
         DataFrame finalKeys = keys;
         class Classifier implements Callable<Object> {
@@ -559,53 +526,48 @@ public class DataFrameThreaded extends DataFrame {
 
             @Override
             public Object call() throws InterruptedException {
-                if (start - end > 1000) {
+                if (start - end > 25_000) {
                     int mid = (start + end) / 2;
-                    executorService.invokeAll(Arrays.asList(new Classifier(start, mid), new Classifier(mid + 1, end)));
+                    executorService.invokeAll(Arrays.asList(new Classifier(start, mid), new Classifier(mid, end)));
                     return null;
-                }
-
-                for (int i = start; i < end; i++) {
+                } else {
+                    for (int i = start; i < end; i++) {
 //                    assert finalKeys != null;
-                    ValueGroup key = new ValueGroup(finalKeys.getRecord(i));
 
+                        //simplify to one getRecord?
+                        ValueGroup key = new ValueGroup(finalKeys.getRecord(i));
+                        Value[] row = getRecord(i);
+
+                        //todo: dataframe view
+                        DataFrame group = storage.computeIfAbsent(key, k -> new DataFrameSparse(getNames(), row));
+                        try {
+                            synchronized (group) {
+                                group.addRecord(row);
+                            }
+                        } catch (DFColumnTypeException e) {
+                            e.printStackTrace();
+                        }
 //                    Queue<Integer> queue = builderQueues.computeIfAbsent(key, k -> new LinkedList<>());
 //                    queue.offer(i);
 
+                    }
+                    return null;
                 }
-                return null;
             }
         }
 
         try {
-            executorService.invokeAll(Collections.singletonList(new Classifier(0, size())));
+            int size = size();
+            int wokrSize = 25_000;
+//            int mid=size/2;
+//            int halfMid=mid/2;
+//            executorService.invokeAll(Arrays.asList(new Classifier(0, halfMid),new Classifier(halfMid, mid),new Classifier(mid,mid+halfMid),new Classifier(mid+halfMid,size)));
+            List<Classifier> workers = new ArrayList<>(size / wokrSize);
+            for (int i = 0; i < size; i += wokrSize)
+                workers.add(new Classifier(i, Math.min(i + wokrSize, size)));
+            executorService.invokeAll(workers);
+//            executorService.invokeAll(Collections.singletonList(new Classifier(0,size)));
         } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-//        for (int i = 0; i < size(); i++) {
-//            ValueGroup key = new ValueGroup(finalKeys.getRecord(i));
-//
-//            Queue<Integer> queue = builderQueues.computeIfAbsent(key, k -> new LinkedList<>());
-//            queue.offer(i);
-//
-//        }
-
-
-        for (ValueGroup key : builderQueues.keySet()) {
-            futures.add(new Adder(key, builderQueues.get(key)));
-        }
-
-
-        try {
-            List<Future<Pair<ValueGroup, DataFrame>>> dfs = executorService.invokeAll(futures);
-            for (Future<Pair<ValueGroup, DataFrame>> f : dfs) {
-                Pair<ValueGroup, DataFrame> p = f.get();
-                storage.put(p.first, p.second);
-            }
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
             e.printStackTrace();
         }
 

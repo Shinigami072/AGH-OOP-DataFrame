@@ -51,214 +51,203 @@ public class DataFrameThreaded extends DataFrame {
         readFile(path, header);
     }
 
-//    @Override
-//    protected void loadData(BufferedReader br) throws IOException, DFValueBuildException {
-//
-//        int colCount = getColCount();
-//
-//        //Builder threads setup
-//        List<Future<Boolean>> builders = new ArrayList<>(colCount);
-//        List<AtomicBoolean> isDone = new ArrayList<>(colCount);
-//
-//        AtomicBoolean finished = new AtomicBoolean(false);
-//
-//
-//        //Builder Thread IO
-//        List<Queue<String>> sources = new ArrayList<>(colCount);
-//        List<Queue<Value>> values = new ArrayList<>(colCount);
-//
-//        for (int i = 0; i < colCount; i++) {
-//            int Fi = i;
-//
-//            isDone.add(new AtomicBoolean(false));
-//            sources.add(new LinkedList<>());
-//            values.add(new LinkedList<>());
-//
-//            builders.add(executorService.submit(new Callable<Boolean>() {
-//                @Override
-//                public Boolean call() throws DFValueBuildException {
-//
-//                    Value.ValueBuilder factory = Value.builder(getTypes()[Fi]);
-//                    Queue<String> source = sources.get(Fi);
-//                    Queue<Value> value = values.get(Fi);
-//
-//                    outer:
-//                    do {
-//
-//                        Value v;
-//
-//                        synchronized (sources.get(Fi)) {
-//
-//
-//                            //wait until Avaliable
-//                            while (source.size() <= 0) {
-//                                if (finished.get())
-//                                    break outer;
-//                                else {
-//                                    try {
-//                                        source.wait();
-//                                    } catch (InterruptedException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                            }
-//
-//                            //build Value
-//                            v = factory.build(source.poll());
-//
-//                        }
-//
-//                        //send to Adder and Notify
-//                        synchronized (values.get(Fi)) {
-//                            value.offer(v);
-//                            values.get(Fi).notify();
-//                        }
-//
-//                        //repeat unitl everything is loaded
-//                    } while (!finished.get() || source.size() > 0);
-//
-//
-//                    //eventually tell them - im done
-//                    isDone.get(Fi).lazySet(true);
-//                    //and notify them
-//                    synchronized (values.get(Fi)) {
-//                        values.get(Fi).notifyAll();
-//                    }
-//
-//                    return null;
-//                }
-//            }));
-//        }
-//
-//
-//        Future<?> Merger = executorService.submit(new Runnable() {
-//            boolean isFinished() {
-//
-//                //if any Queue still has values
-//                for (Queue<Value> q : values)
-//                    if (q.size() > 0)
-//                        return false;
-//
-//                //if any builder is still building
-//                for (AtomicBoolean b : isDone) {
-//                    if (!b.get())
-//                        return false;
-//                }
-//
-//                return true;
-//            }
-//
-//            boolean isFinished(int i) {
-//                return values.get(i).size() <= 0 && isDone.get(i).get();
-//            }
-//
-//            @Override
-//            public void run() {
-//                //reuse the same Array for every additinon
-//                Value[] row = new Value[colCount];
-//
-//                outer:
-//                do {
-//
-//                    //Get One of each value
-//                    for (int i = 0; i < values.size(); i++)
-//
-//                        synchronized (values.get(i)) {
-//
-//                            while ((row[i] = values.get(i).poll()) == null) {
-//
-//                                //if there will be no more values - stop adding
-//                                if (isFinished(i))
-//                                    break outer;
-//
-//                                    //if there is something to be added
-//                                else if (values.get(i).size() > 0)
-//                                    continue;
-//
-//                                //wait until help arrives
-//                                try {
-//                                    values.get(i).wait();
-//                                } catch (InterruptedException e) {
-//                                    e.printStackTrace();
-//                                }
-//                            }
-//                        }
-//
-//                    //is should have correct Types and ammounts
-//                    try {
-//                        addRecord(row);
-//                    } catch (DFColumnTypeException e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                } while (!isFinished());
-//            }
-//
-//
-//        });
-//
-//
-//        //Load From File into Queues
-//        String[] strLine;
-//        String temp;
-//        int row = 0;
-//        while ((temp = br.readLine()) != null) {
-//
-//            strLine = temp.split(",");
-//
-//            if (strLine.length != colCount)
-//                throw new DFDimensionException("Wrong row size in foile at row" + row);
-//
-//            row++;
-//            //send string to each builder and notify him
-//            for (int i = 0; i < strLine.length; i++) {
-//                String s = strLine[i];
-//                synchronized (sources.get(i)) {
-//
-//                    sources.get(i).offer(s);
-//                    sources.get(i).notify();
-//                }
-//            }
-//        }
-//
-//        try {
-//            //notify of completion
-//            finished.set(true);
-//            for (int i = 0; i < sources.size(); i++) {
-//                synchronized (sources.get(i)) {
-//                    sources.get(i).notifyAll();
-//                }
-//            }
-//
-//            //in case there is an exception
-//            for (Future<Boolean> builder : builders) {
-//                builder.get();
-//            }
-//
-//            //make sure it completed succesfully
-//            Merger.get();
-//
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//            throw new DFValueBuildException("Multi threader Int:" + e.getMessage());
-//        } catch (ExecutionException e) {
-//            e.printStackTrace();
-//            throw new DFValueBuildException(e.getCause().getMessage());
-//        }
-//
-//    }
+    @Override
+    protected void loadData(BufferedReader br) throws IOException, DFValueBuildException {
+
+        int colCount = getColCount();
+
+        //Builder threads setup
+        List<Future<Boolean>> builders = new ArrayList<>(colCount);
+        List<AtomicBoolean> isDone = new ArrayList<>(colCount);
+
+        AtomicBoolean finished = new AtomicBoolean(false);
 
 
-//    @Override
-//    public void addRecord(Value... values) throws DFColumnTypeException, DFDimensionException {
-//        synchronized (lazyaddingQueue){
-//        lazyaddingQueue.add(values);
-//        if(lazyaddingQueue.size() > 10000) {
-//            addAllRecords(lazyaddingQueue);
-//            lazyaddingQueue.clear();
-//        }
-//        }
-//    }
+        //Builder Thread IO
+        List<Queue<String>> sources = new ArrayList<>(colCount);
+        List<Queue<Value>> values = new ArrayList<>(colCount);
+
+        for (int i = 0; i < colCount; i++) {
+            int Fi = i;
+
+            isDone.add(new AtomicBoolean(false));
+            sources.add(new LinkedList<>());
+            values.add(new LinkedList<>());
+
+            builders.add(executorService.submit(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws DFValueBuildException {
+
+                    Value.ValueBuilder factory = Value.builder(getTypes()[Fi]);
+                    Queue<String> source = sources.get(Fi);
+                    Queue<Value> value = values.get(Fi);
+
+                    outer:
+                    do {
+
+                        Value v;
+
+                        synchronized (sources.get(Fi)) {
+
+
+                            //wait until Avaliable
+                            while (source.size() <= 0) {
+                                if (finished.get())
+                                    break outer;
+                                else {
+                                    try {
+                                        source.wait();
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+
+                            //build Value
+                            v = factory.build(source.poll());
+
+                        }
+
+                        //send to Adder and Notify
+                        synchronized (values.get(Fi)) {
+                            value.offer(v);
+                            values.get(Fi).notify();
+                        }
+
+                        //repeat unitl everything is loaded
+                    } while (!finished.get() || source.size() > 0);
+
+
+                    //eventually tell them - im done
+                    isDone.get(Fi).lazySet(true);
+                    //and notify them
+                    synchronized (values.get(Fi)) {
+                        values.get(Fi).notifyAll();
+                    }
+
+                    return null;
+                }
+            }));
+        }
+
+
+        Future<?> Merger = executorService.submit(new Runnable() {
+            boolean isFinished() {
+
+                //if any Queue still has values
+                for (Queue<Value> q : values)
+                    if (q.size() > 0)
+                        return false;
+
+                //if any builder is still building
+                for (AtomicBoolean b : isDone) {
+                    if (!b.get())
+                        return false;
+                }
+
+                return true;
+            }
+
+            boolean isFinished(int i) {
+                return values.get(i).size() <= 0 && isDone.get(i).get();
+            }
+
+            @Override
+            public void run() {
+                //reuse the same Array for every additinon
+                Value[] row = new Value[colCount];
+
+                outer:
+                do {
+
+                    //Get One of each value
+                    for (int i = 0; i < values.size(); i++)
+
+                        synchronized (values.get(i)) {
+
+                            while ((row[i] = values.get(i).poll()) == null) {
+
+                                //if there will be no more values - stop adding
+                                if (isFinished(i))
+                                    break outer;
+
+                                    //if there is something to be added
+                                else if (values.get(i).size() > 0)
+                                    continue;
+
+                                //wait until help arrives
+                                try {
+                                    values.get(i).wait();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+
+                    //is should have correct Types and ammounts
+                    try {
+                        addRecord(row);
+                    } catch (DFColumnTypeException e) {
+                        e.printStackTrace();
+                    }
+
+                } while (!isFinished());
+            }
+
+
+        });
+
+
+        //Load From File into Queues
+        String[] strLine;
+        String temp;
+        int row = 0;
+        while ((temp = br.readLine()) != null) {
+
+            strLine = temp.split(",");
+
+            if (strLine.length != colCount)
+                throw new DFDimensionException("Wrong row size in foile at row" + row);
+
+            row++;
+            //send string to each builder and notify him
+            for (int i = 0; i < strLine.length; i++) {
+                String s = strLine[i];
+                synchronized (sources.get(i)) {
+
+                    sources.get(i).offer(s);
+                    sources.get(i).notify();
+                }
+            }
+        }
+
+        try {
+            //notify of completion
+            finished.set(true);
+            for (int i = 0; i < sources.size(); i++) {
+                synchronized (sources.get(i)) {
+                    sources.get(i).notifyAll();
+                }
+            }
+
+            //in case there is an exception
+            for (Future<Boolean> builder : builders) {
+                builder.get();
+            }
+
+            //make sure it completed succesfully
+            Merger.get();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            throw new DFValueBuildException("Multi threader Int:" + e.getMessage());
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            throw new DFValueBuildException(e.getCause().getMessage());
+        }
+
+    }
+
 
     public static DataFrame convertCallableToDataFrame(List<Callable<Column>> callables, ExecutorService executorService) {
         try {
@@ -576,14 +565,14 @@ public class DataFrameThreaded extends DataFrame {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return null;
-//        return new GrupatorThreaded(storage, colname, keys.getTypes());//todo - czech perfofmans pls
+        return new GrupatorThreaded(storage, colname, keys.getTypes());//todo - czech perfofmans pls
 
     }
 
     class GrupatorThreaded implements GroupBy {
 
         Map<ValueGroup, DataFrame> groups;
+        SortedSet<ValueGroup> orderedKeys;
         String[] datanames;
 
         String[] keynames;
@@ -593,24 +582,29 @@ public class DataFrameThreaded extends DataFrame {
             this.groups = groups;
             this.keynames = keynames;
             this.keyTypes = keyTypes;
+            orderedKeys=new TreeSet<>(groups.keySet());
+            Set<String> datanames = new HashSet<String>(Arrays.asList(getNames()));
+            datanames.removeAll(Arrays.asList(keynames));
 
-//            Set<String> datanames = new HashSet<String>(Arrays.asList(getNames()));
-//            datanames.removeAll(Arrays.asList(keynames));
-//
-//            this.datanames = datanames.toArray(new String[0]);
+            this.datanames = datanames.toArray(new String[0]);
         }
 
         @Override
         public DataFrame apply(Applyable apply) throws DFApplyableException {
             List<Callable<DataFrame>> groupCalculator = new ArrayList<>(groups.size());
-            for (ValueGroup key : groups.keySet()) {
+            for (ValueGroup key : orderedKeys) {
                 groupCalculator.add(new Callable<DataFrame>() {
 
                     @Override
-                    public DataFrame call() throws DFApplyableException, CloneNotSupportedException {
+                    public DataFrame call() throws DFApplyableException {
 
                         DataFrame group = groups.get(key);
-                        DataFrame cutDown = group.get(datanames, false);
+                        DataFrame cutDown = null;
+                        try {
+                            cutDown = group.get(datanames, false);
+                        } catch (CloneNotSupportedException e) {
+                            e.printStackTrace();
+                        }
 
                         return apply.apply(cutDown);
 
@@ -622,8 +616,7 @@ public class DataFrameThreaded extends DataFrame {
 
             try {
                 List<Future<DataFrame>> calculated = executorService.invokeAll(groupCalculator);
-                SortedSet<ValueGroup> k = new TreeSet<>(groups.keySet());
-                Iterator<ValueGroup> keys = k.iterator();
+                Iterator<ValueGroup> keys = orderedKeys  .iterator();
                 DataFrame output = null;
 
                 for (Future<DataFrame> f : calculated) {
@@ -632,16 +625,19 @@ public class DataFrameThreaded extends DataFrame {
                     if (output == null)
                         output = GroupBy.getOutputDataFrame(keyTypes, keynames, group.getTypes(), group.getNames());
 
-                    GroupBy.addGroup(output, key.getId(), group);
+                    try {
+                        GroupBy.addGroup(output, key.getId(), group);
+                    } catch (DFColumnTypeException e1) {
+                        e1.printStackTrace();
+                    }
                 }
                 return output;
 
             } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (DFColumnTypeException e) {
-                e.printStackTrace();
+               throw new DFApplyableException(e.getMessage());
             } catch (ExecutionException e) {
-                e.printStackTrace();
+                if(e.getCause() instanceof DFApplyableException)
+                    throw (DFApplyableException) (e.getCause());
             }
 
             return null;

@@ -1,32 +1,36 @@
 import lab0.dataframe.DataFrame;
+import lab0.dataframe.DataFrameDB;
+import lab0.dataframe.DataFrameThreaded;
 import lab0.dataframe.exceptions.DFApplyableException;
 import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.exceptions.DFValueBuildException;
-import lab0.dataframe.DataFrameThreaded;
 import lab0.dataframe.groupby.GroupBy;
-import lab0.dataframe.values.*;
+import lab0.dataframe.values.DateTimeValue;
+import lab0.dataframe.values.DoubleValue;
+import lab0.dataframe.values.FloatValue;
+import lab0.dataframe.values.StringValue;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.TreeSet;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class TestMain {
 
     public static void main(String[] argv) throws IOException, DFColumnTypeException, DFApplyableException, CloneNotSupportedException, SQLException, ClassNotFoundException, DFValueBuildException {
 //        Class.forName("com.mysql.jdbc.Driver");
-//        DataFrameDB db = DataFrameDB.getBuilder()
-//                .setUrl("jdbc:mysql://mysql.agh.edu.pl/krzysst")
-//                .setLogin("krzysst", "2JuPF0y9TSCvuUsL")
-//                .setName("city").build();
+        DataFrameDB dbA = DataFrameDB.getBuilder()
+                .setUrl("jdbc:mysql://mysql.agh.edu.pl/krzysst")
+                .setLogin("krzysst", "2JuPF0y9TSCvuUsL")
+                .setName("`TABLE 5`").build();
 //        DataFrameDB db =DataFrameDB.getBuilder()
 //                .setUrl("jdbc:mysql://ensembldb.ensembl.org/rattus_norvegicus_core_70_5")
 //                .setLogin("anonymous","")
 //                .setName("marker_feature").build();
-
-//        for(int i=0;i<db.size();i++){
+//
+////        for(int i=0;i<db.size();i++){
 //        System.out.println(Arrays.toString(db.getRecord(i)));
 //        }
 //        DataFrame db = new DataFrame("city.csv",new Class[]{IntegerValue.class,StringValue.class,StringValue.class,StringValue.class,IntegerValue.class});
@@ -37,11 +41,23 @@ class TestMain {
 //        threadPoolA.shutdown();
         //Executors.newWorkStealingPool(10);
         String name = null;
-        String path = "test/testData/ultimate/ultimate11.csv";
+        String tablename = "ultimate5";
+        String path = "test/testData/ultimate/"+tablename+".csv";
         String id = argv[0];
         do {
             System.out.print("\nloading");
+            long A = System.currentTimeMillis();
             switch (id) {
+                case "C":
+                    name = "dbase";
+                    System.out.print(" " + name + ".");
+                    System.out.print(".");
+                    db = DataFrameDB.getBuilder()
+                            .setUrl("jdbc:mysql://mysql.agh.edu.pl/krzysst")
+                            .setLogin("krzysst", "2JuPF0y9TSCvuUsL")
+                            .setName("city").build();
+                    System.out.print(".");
+                break;
                 case "B":
                     name = "single";
                     System.out.print(" " + name + ".");
@@ -55,7 +71,7 @@ class TestMain {
                     System.out.print(".");
                     db = new DataFrameThreaded(threadPoolC, path, new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
                     System.out.print(".");
-                    break;
+                break;
 
 //            threadPool.shutdown();
 //            long C = System.currentTimeMillis();
@@ -64,11 +80,14 @@ class TestMain {
 //                dbC = new DataFrameThreaded(threadPoolC, "test/testData/ultimate/ultimate.csv", new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
 //            System.out.printf("C %3.2f\n", ((System.currentTimeMillis() - C) / (float) 2));
             }
+            System.out.printf(name + " %3.2f  ", (float)(System.currentTimeMillis() - A));
 
-            final int N = 10;
+            System.out.printf(name + " %3.2f  ",  (float)(System.currentTimeMillis() - A));
+
+            final int N = 1;
             Random r = new Random();
             System.out.println("\nloaded");
-            for (int j = 0; j < 4; j++) {
+            for (int j = 0; j < 1; j++) {
                 int col = r.nextInt(db.getColCount() - 2) + 1;
                 int Cc = db.getColCount();
 //            String[] s = new String[col];
@@ -83,11 +102,11 @@ class TestMain {
 //[id]single 7997.40
 //[id]single 8030.70
 //[id]single 8346.90
+                GroupBy gB = db.groupBy(s);
 
                 long B = System.currentTimeMillis();
                 for (int i = 0; i < N; i++) {
-                    GroupBy gB = db.groupBy(s);
-//                gB.max();
+                    System.out.println(gB.max());
                 }
                 System.out.printf(name + " %3.2f  ", ((System.currentTimeMillis() - B) / (float) N));
             }

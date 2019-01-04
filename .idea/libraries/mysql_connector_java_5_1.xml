@@ -1,15 +1,21 @@
 <component name="libraryTable">
   <library name="mysql-connector-java-5.1">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-5.1.47" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-5.1.47/src" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/build/java" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/demo/java" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/generated/java" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/legacy/java" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/main/core-api/java" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/main/core-impl/java" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/main/protocol-impl/java" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/main/user-api/java" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/main/user-impl/java" />
+      <root url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/src/test/java" />
     </SOURCES>
-    <excluded>
-      <root url="jar://$PROJECT_DIR$/lib/mysql-connector-java-5.1.47/mysql-connector-java-5.1.47-bin.jar!/" />
-    </excluded>
-    <jarDirectory url="file://$PROJECT_DIR$/lib/mysql-connector-java-5.1.47" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13" recursive="false" />
   </library>
 </component>

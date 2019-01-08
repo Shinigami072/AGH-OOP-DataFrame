@@ -1,11 +1,7 @@
 package lab0.dataframe.groupby;
 
-import lab0.dataframe.DataFrame;
-import lab0.dataframe.exceptions.DFApplyableException;
-import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.values.Value;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public class MinApplyable extends ComparableApplyable {

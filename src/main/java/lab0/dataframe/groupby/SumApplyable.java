@@ -15,29 +15,29 @@ public class SumApplyable implements Applyable {
     public DataFrame apply(DataFrame df) throws DFApplyableException {
 
         try {
-            ArrayList<String> colnames = new ArrayList<>();
+            ArrayList<String> column_names = new ArrayList<>();
             ArrayList<Class<? extends Value>> types = new ArrayList<>();
 
             Class<? extends Value>[] df_types = df.getTypes();
-            String[] df_colnames = df.getNames();
+            String[] df_column_names = df.getNames();
             for (int i = 0; i < df_types.length; i++) {
                 if (NumericValue.class.isAssignableFrom(df_types[i])) {
-                    colnames.add(df_colnames[i]);
+                    column_names.add(df_column_names[i]);
                     types.add(df_types[i]);
                 }
             }
 
 
-            DataFrame output = new DataFrame(colnames.toArray(new String[0]), types.toArray(new Class[0]));
+            DataFrame output = new DataFrame(column_names.toArray(new String[0]), types.toArray(new Class[0]));
             //https://en.wikipedia.org/wiki/Kahan_summation_algorithm
-            //possible aqquarcy gain
-            String[] output_colnames = output.getNames();
+            //possible accuracy gain
+            String[] output_column_names = output.getNames();
             Value[] row = new Value[output.getColCount()];
 
             int size = df.size();
             if (size > 0) {
                 int col = 0;
-                for (String colname : output_colnames) {
+                for (String colname : output_column_names) {
                     DataFrame.Column k = df.get(colname);
                     row[col] = k.get(0);
                     for (int i = 1; i < size; i++) {

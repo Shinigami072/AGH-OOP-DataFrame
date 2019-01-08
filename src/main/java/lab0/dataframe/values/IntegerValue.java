@@ -30,8 +30,8 @@ public class IntegerValue extends NumericValue {
      * Works only on numeric types,
      * the result of addition is cast to an int
      * @param v Value to add
-     * @return IntegerValueconteining result
-     * @throws UnsupportedOperationException
+     * @return IntegerValue containing result
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public IntegerValue add(Value v) throws UnsupportedOperationException{
@@ -45,8 +45,8 @@ public class IntegerValue extends NumericValue {
      * Works only on numeric types,
      * the result of subtraction is cast to an int
      * @param v Value to add
-     * @return IntegerValueconteining result
-     * @throws UnsupportedOperationException
+     * @return IntegerValue containing result
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public IntegerValue sub(Value v) throws UnsupportedOperationException{
@@ -60,8 +60,8 @@ public class IntegerValue extends NumericValue {
      * Works only on numeric types,
      * the result of multiplication is cast to an int
      * @param v Value to add
-     * @return IntegerValueconteining result
-     * @throws UnsupportedOperationException
+     * @return IntegerValue containing result
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public IntegerValue mul(Value v) throws UnsupportedOperationException{
@@ -73,10 +73,10 @@ public class IntegerValue extends NumericValue {
 
     /**
      * Works only on numeric types,
-     * the result of divison is cast to an int
+     * the result of division is cast to an int
      * @param v Value to add
-     * @return IntegerValueconteining result
-     * @throws UnsupportedOperationException
+     * @return IntegerValue containing result
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public IntegerValue div(Value v) throws UnsupportedOperationException{
@@ -94,7 +94,7 @@ public class IntegerValue extends NumericValue {
      *
      * @param v is interpreted as double
      * @return this^v
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public IntegerValue pow(Value v) throws UnsupportedOperationException {

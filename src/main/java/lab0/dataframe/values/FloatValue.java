@@ -31,7 +31,7 @@ public class FloatValue extends NumericValue {
      * the result of addition is cast to an float
      * @param v Value to add
      * @return FloatValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public FloatValue add(Value v) throws UnsupportedOperationException {
@@ -46,7 +46,7 @@ public class FloatValue extends NumericValue {
      * the result of subtraction is cast to an float
      * @param v Value to add
      * @return FloatValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public FloatValue sub(Value v) throws UnsupportedOperationException {
@@ -60,7 +60,7 @@ public class FloatValue extends NumericValue {
      * the result of multiplication is cast to an float
      * @param v Value to add
      * @return FloatValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public FloatValue mul(Value v) throws UnsupportedOperationException {
@@ -71,10 +71,10 @@ public class FloatValue extends NumericValue {
     }
     /**
      * Works only on numeric types,
-     * the result of divison is cast to an float
+     * the result of division is cast to an float
      * @param v Value to add
      * @return FloatValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public FloatValue div(Value v) throws UnsupportedOperationException {
@@ -92,7 +92,7 @@ public class FloatValue extends NumericValue {
      * the result of power is cast to an float
      * @param v Value to add
      * @return FloatValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public FloatValue pow(Value v) throws UnsupportedOperationException {

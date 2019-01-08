@@ -6,8 +6,8 @@ public abstract class NumericValue extends Value{
     /**
      * Comparison uses !eq
      *
-     * @param v
-     * @return
+     * @param v argument
+     * @return is not equal
      */
     @Override
     public boolean neq(Value v){
@@ -17,8 +17,8 @@ public abstract class NumericValue extends Value{
     /**
      * Comparison - uses numeric equals
      *
-     * @param v
-     * @return
+     * @param v argument
+     * @return is equal
      */
     @Override
     public boolean eq(Value v) {
@@ -28,10 +28,10 @@ public abstract class NumericValue extends Value{
         double this_val = Math.abs(getValue().doubleValue());
         double other_val = Math.abs(((Number)(v.getValue())).doubleValue());
         double epsilon = 1.0e-13 * ( this_val>other_val? this_val : other_val);
-        final DoubleValue pepsilon = new DoubleValue(epsilon);
-        final DoubleValue nepsilon = new DoubleValue(-epsilon);
+        final DoubleValue positive_epsilon = new DoubleValue(epsilon);
+        final DoubleValue negative_epsilon = new DoubleValue(-epsilon);
 
-        return (diff.lte(pepsilon) &&diff.gte(nepsilon));
+        return (diff.lte(positive_epsilon) &&diff.gte(negative_epsilon));
     }
 
     @Override

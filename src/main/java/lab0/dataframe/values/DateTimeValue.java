@@ -35,21 +35,6 @@ public class DateTimeValue extends Value {
         return val;
     }
 
-    //    public int getDayOfMonth(){
-//        return val.getDayOfMonth();
-//    }
-//    public DayOfWeek getDayOfWeek(){
-//        return val.getDayOfWeek();
-//    }
-//    public int getDayofMonth(){
-//        val.getSecond();
-//        val.getNano();
-//        val.getMonthValue();
-//        val.getMonth();
-//        val.getSecond();
-//        val.get
-//        return val.getYear();
-//    }
     @Override
     public String toString() {
         return val.toString();
@@ -65,7 +50,7 @@ public class DateTimeValue extends Value {
     /**
      * Unsupported
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DateTimeValue add(Value v) throws UnsupportedOperationException {
@@ -75,7 +60,7 @@ public class DateTimeValue extends Value {
     /**
      * Unsupported
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DateTimeValue sub(Value v) throws UnsupportedOperationException {
@@ -85,7 +70,7 @@ public class DateTimeValue extends Value {
     /**
      * Unsupported
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DateTimeValue mul(Value v) throws UnsupportedOperationException {
@@ -95,7 +80,7 @@ public class DateTimeValue extends Value {
     /**
      * Unsupported
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DateTimeValue div(Value v) throws UnsupportedOperationException {
@@ -105,7 +90,7 @@ public class DateTimeValue extends Value {
     /**
      * Unsupported
      *
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DateTimeValue pow(Value v) throws UnsupportedOperationException {
@@ -126,7 +111,7 @@ public class DateTimeValue extends Value {
     /**
      * Checks if this date4 is before v
      *
-     * @param v date to chek with
+     * @param v date to check with
      * @return if this ids before v
      */
     @Override
@@ -140,7 +125,7 @@ public class DateTimeValue extends Value {
     /**
      * Checks if this date4 is after v
      *
-     * @param v date to chek with
+     * @param v date to check with
      * @return if this ids after v
      */
     @Override

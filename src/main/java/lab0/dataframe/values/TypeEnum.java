@@ -8,29 +8,45 @@ import java.util.Map;
 public class TypeEnum {
     public enum Type {
 
-        LONGNVARCHAR(Types.LONGNVARCHAR, StringValue.class),
-        LONGVARCHAR(Types.LONGVARCHAR, StringValue.class),
-        VARCHAR(Types.VARCHAR, StringValue.class),
-        NCHAR(Types.NCHAR, StringValue.class),
-        CHAR(Types.CHAR, StringValue.class),
-        DATE(Types.DATE, DateTimeValue.class),
-        FLOAT(Types.FLOAT, FloatValue.class),
-        DECIMAL(Types.DECIMAL, DoubleValue.class),
-        DOUBLE(Types.DOUBLE, DoubleValue.class),
-        REAL(Types.REAL, DoubleValue.class),
-        INTEGER(Types.INTEGER, IntegerValue.class),
-        SMALLINT(Types.SMALLINT, IntegerValue.class),
-        TINYINT(Types.TINYINT, IntegerValue.class),
-        BIGINT(Types.BIGINT, IntegerValue.class),
-        ;
+        LONG_NVARCHAR(Types.LONGNVARCHAR, StringValue.class, "nvarchar"),
+        LONG_VARCHAR(Types.LONGVARCHAR, StringValue.class, "nvarchar"),
+        NCHAR(Types.NCHAR, StringValue.class, "char"),
+        CHAR(Types.CHAR, StringValue.class, "char"),
+        VARCHAR(Types.VARCHAR, StringValue.class, "varchar(255)"),
+        DATE(Types.DATE, DateTimeValue.class, "date"),
+        FLOAT(Types.FLOAT, FloatValue.class, "float(24,7)"),
+        DECIMAL(Types.DECIMAL, DoubleValue.class, "decimal"),
+        REAL(Types.REAL, DoubleValue.class, "real"),
+        DOUBLE(Types.DOUBLE, DoubleValue.class, "float(53,7)"),
+        SMALLINT(Types.SMALLINT, IntegerValue.class, "smallint"),
+        TINYINT(Types.TINYINT, IntegerValue.class, "tinyint"),
+        BIGINT(Types.BIGINT, IntegerValue.class, "bigint"),
+        INTEGER(Types.INTEGER, IntegerValue.class, "int");
         private static final Map<Integer, Class<? extends Value>> SQL_TO_VALUE = Collections.unmodifiableMap(initValues());
         private static final Map<Integer, Type> SQL_TO_TYPE = Collections.unmodifiableMap(initTypes());
-        int type;
-        Class<? extends Value> value;
+        private static final Map<Class<? extends Value>, Type> CLASS_TO_TYPE = Collections.unmodifiableMap(initClass());
 
-        Type(int sqlType, Class<? extends Value> concreteType) {
+        private static Map<Class<? extends Value>, Type> initClass() {
+            HashMap<Class<? extends Value>, Type> map = new HashMap<>(values().length);
+            for (Type t : values()) {
+                map.put(t.value, t);
+            }
+            return map;
+        }
+
+        final int type;
+        final Class<? extends Value> value;
+        final String sql;
+
+        Type(int sqlType, Class<? extends Value> concreteType, String sql) {
             this.type = sqlType;
             this.value = concreteType;
+            this.sql = sql;
+        }
+
+        public String getSql() {
+
+            return sql;
         }
 
         private static HashMap<Integer, Class<? extends Value>> initValues() {
@@ -49,6 +65,9 @@ public class TypeEnum {
             return map;
         }
 
+        public static Type getType(Class<? extends Value> t) {
+            return CLASS_TO_TYPE.get(t);
+        }
 
         public static Type getType(int i) {
             return SQL_TO_TYPE.get(i);

@@ -1,11 +1,12 @@
 package lab0.dataframe;
 
 import lab0.dataframe.exceptions.*;
-import lab0.dataframe.groupby.Applyable;
 import lab0.dataframe.groupby.GroupBy;
 import lab0.dataframe.values.Value;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 
 public class DataFrame {
@@ -35,7 +36,7 @@ public class DataFrame {
                 addRecord(tempValues);
 
             } catch (DFColumnTypeException e) {
-                //this shouldnt happen
+                //this shouldn't happen
                 e.printStackTrace();
             }
         }
@@ -158,7 +159,7 @@ public class DataFrame {
     public void addRecord(Value... values) throws DFColumnTypeException, DFDimensionException {
         if (values.length != columns.length)
             throw new DFDimensionException(String.format("DF col %d , record length: %d", getColCount(), values.length));
-        for (int i = 0; i < columns.length; i++)//todo: make this more performant
+        for (int i = 0; i < columns.length; i++)//todo: make this more performance oriented
             if (!columns[i].typ.isInstance(values[i]))
                 throw new DFColumnTypeException(columns[i], values[i], i);
 
@@ -257,7 +258,7 @@ public class DataFrame {
             e.printStackTrace();
         }
 
-        return new Grupator4000(new TreeMap<>(storage).values(), colname, keys.getTypes());//todo - czech perfofmans pls
+        return new BasicGroupHolder(new TreeMap<>(storage).values(), colname, keys.getTypes());//todo - czech performance pls
 
     }
 
@@ -474,7 +475,7 @@ public class DataFrame {
     }
 
     protected class ValueGroup implements Comparable<ValueGroup> {
-        private Value[] id;
+        private final Value[] id;
 
         @Override
         public String toString() {
@@ -532,101 +533,6 @@ public class DataFrame {
     @Override
     public int hashCode() {
         return Arrays.hashCode(columns);
-    }
-
-    //todo: possible memory improvement - store groups as lists of rows in original DataFrame
-    public final class Grupator4000 implements GroupBy {
-
-        private final LinkedList<DataFrame> groups;
-        private final String[] id_colnames;
-        private final String[] data_colnames;
-        private final DataFrame id_values;
-
-
-        Grupator4000(Collection<DataFrame> collection, String[] colnames, Class<? extends Value>[] types) {
-            groups = new LinkedList<>(collection);
-            id_colnames = colnames;
-
-
-            String[] all_colnames = groups.getFirst().getNames();
-//            data_colnames= new String[all_colnames.length-id_colnames.length];
-
-            Set<String> all = new HashSet<>(Arrays.asList(all_colnames));
-            all.removeAll(Arrays.asList(id_colnames));
-            data_colnames = all.toArray(new String[0]);
-
-//            int j =0;
-//            outer:
-//            for (String colname : all_colnames) {
-//
-//                //setn containing all_colnames -excluding id colnames- used for faster access to data
-//                for (String id : id_colnames)
-//                    if (colname.equals(id))
-//                        continue outer;
-//
-//                data_colnames[j] = colname;
-//                j++;
-//            }
-
-
-            id_values = new DataFrame(colnames, types);
-
-            try {
-
-                for (DataFrame df : groups) {
-                    Value[] row = new Value[id_colnames.length];
-
-                    for (int i = 0; i < id_colnames.length; i++) {
-
-                        row[i] = (df.get(id_colnames[i]).get(0));
-
-                    }
-
-                    id_values.addRecord(row);
-                }
-
-            } catch (DFColumnTypeException e) {
-                e.printStackTrace();
-            }
-
-
-        }
-
-        public List<DataFrame> getGroups() {
-            return groups;
-        }
-
-        @Override
-        public DataFrame apply(Applyable function) throws DFApplyableException {
-
-            try {
-                DataFrame output = null;
-                for (int groupID = 0; groupID < groups.size(); groupID++) {
-
-                    DataFrame group = function.apply(groups.get(groupID).get(data_colnames, false));
-                    //inicjalizacja DataFrame output
-                    //tak żeby zawierał otpowiednie typy kolunm na wyjściu
-                    if (output == null) {
-                        output = GroupBy.getOutputDataFrame(id_values.getTypes(), id_values.getNames(), group.getTypes(), group.getNames());
-                    }
-
-                    //przepisanie wartości z temp, jeżelicoś zawiera
-                    if (group.size() > 0) {
-                        GroupBy.addGroup(output, id_values.getRecord(groupID), group);
-                    }
-
-                }
-
-
-                return output;
-
-            } catch (DFColumnTypeException | CloneNotSupportedException e) {
-                throw new DFApplyableException(e.getMessage());
-            }
-
-        }
-
-
     }
 
 

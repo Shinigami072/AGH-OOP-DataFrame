@@ -72,25 +72,25 @@ public abstract class Value<T> implements Cloneable {
     /**
      * implementation dependent
      *
-     * @return create new Value adding the two calues together
+     * @return create new Value adding the two values together
      */
     public abstract Value add(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
-     * @return create new Value subtracting the two calues together
+     * @return create new Value subtracting the two values together
      */
     public abstract Value sub(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
-     * @return create new Value multiplying the two calues together
+     * @return create new Value multiplying the two values together
      */
     public abstract Value mul(Value v) throws UnsupportedOperationException;
 
     /**
      * implementation dependent
-     * @return create new Value dic=viding the two calues together
+     * @return create new Value dividing the two values together
      */
     public abstract Value div(Value v) throws UnsupportedOperationException;
 

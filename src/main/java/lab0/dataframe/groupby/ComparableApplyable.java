@@ -12,14 +12,14 @@ public abstract class ComparableApplyable implements Applyable {
 
     protected abstract void comparison(Value[] optimal, Value[] tested, Set<Integer> banned);
 
-    protected String[] restNames(String[] output_colnames, Set<Integer> banned) {
-        String[] colnames = new String[output_colnames.length - banned.size()];
+    protected String[] restNames(String[] output_column_names, Set<Integer> banned) {
+        String[] column_names = new String[output_column_names.length - banned.size()];
 
-        for (int i = 0, j = 0; i < output_colnames.length; i++) {
+        for (int i = 0, j = 0; i < output_column_names.length; i++) {
             if (!banned.contains(i))
-                colnames[j++] = output_colnames[i];
+                column_names[j++] = output_column_names[i];
         }
-        return colnames;
+        return column_names;
     }
 
     @Override
@@ -41,11 +41,11 @@ public abstract class ComparableApplyable implements Applyable {
             }
 
             if (bannedColumns.size() == output.getColCount())
-                throw new DFApplyableException("no comparable Columns in Dataframe");
+                throw new DFApplyableException("no comparable Columns in Data frame");
 
-            String[] colnames = restNames(output.getNames(), bannedColumns);
+            String[] column_names = restNames(output.getNames(), bannedColumns);
 
-            return output.get(colnames, false);
+            return output.get(column_names, false);
 
         } catch (DFColumnTypeException | CloneNotSupportedException e) {
             throw new DFApplyableException(e.getMessage());//todo: Applyable Type error

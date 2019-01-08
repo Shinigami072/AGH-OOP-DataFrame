@@ -17,13 +17,13 @@ public class VarApplyable implements Applyable {
             DataFrame output = new DataFrame(mean.getNames(), mean.getTypes());
             //problemy numeryczne - https://www.johndcook.com/blog/standard_deviation/ możliwe rozwiązanie
             //https://en.wikipedia.org/wiki/Kahan_summation_algorithm
-            //possible aqquarcy gain
+            //possible accuracy gain
             if (df.size() > 1) {
 
                 Value[] means = mean.getRecord(0);
 
-                String[] colnames = mean.getNames();
-                DataFrame sizedDown = df.get(colnames, false);
+                String[] column_names = mean.getNames();
+                DataFrame sizedDown = df.get(column_names, false);
 
                 DoubleValue sq = new DoubleValue(2.0);
 
@@ -32,7 +32,7 @@ public class VarApplyable implements Applyable {
                 for (int i = 0; i < sizedDown.size(); i++) {
                     Value[] data = sizedDown.getRecord(i);
                     for (int j = 0; j < means.length; j++) {
-                        //wartosć w doublu
+                        //wartość w double
                         DoubleValue val = new DoubleValue(((NumericValue) data[j]).getValue().doubleValue());
 
 
@@ -43,7 +43,7 @@ public class VarApplyable implements Applyable {
                     }
                 }
 
-                //podizelenie sumy kwadratów przez n-1
+                //podzielenie sumy kwadratów przez n-1
                 DoubleValue divider = new DoubleValue(sizedDown.size() - 1);
                 for (int j = 0; j < means.length; j++) {
                     variance[j] = variance[j].div(divider);

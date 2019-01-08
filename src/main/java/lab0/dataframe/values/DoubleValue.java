@@ -29,7 +29,7 @@ public class DoubleValue extends NumericValue {
      * the result of addition is cast to an double
      * @param v Value to add
      * @return DoubleValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DoubleValue add(Value v) {
@@ -44,7 +44,7 @@ public class DoubleValue extends NumericValue {
      * the result of subtraction is cast to an double
      * @param v Value to add
      * @return DoubleValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DoubleValue sub(Value v) {
@@ -59,7 +59,7 @@ public class DoubleValue extends NumericValue {
      * the result of multiplication is cast to an double
      * @param v Value to add
      * @return DoubleValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DoubleValue mul(Value v) {
@@ -74,7 +74,7 @@ public class DoubleValue extends NumericValue {
      * the result of division is cast to an double
      * @param v Value to add
      * @return DoubleValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DoubleValue div(Value v) {
@@ -92,7 +92,7 @@ public class DoubleValue extends NumericValue {
      * the result of this to the power of argument is cast to an double
      * @param v Value to add
      * @return DoubleValue containing result
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException not implemented
      */
     @Override
     public DoubleValue pow(Value v) {

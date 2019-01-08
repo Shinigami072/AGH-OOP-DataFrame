@@ -86,15 +86,15 @@ public class StringValue extends Value {
             return false;
     }
 
-    /**compares albhabetically using to sting method
-     * returns if is befote or the same
+    /**compares alphabetically using to sting method
+     * returns if is before or the same
      */
     @Override
     public boolean lte(Value v) {
         return val.compareTo(v.toString())<=0;
     }
 
-    /**compares albhabetically using to sting method
+    /**compares alphabetically using to sting method
      * returns if is after or the same
      */
     @Override

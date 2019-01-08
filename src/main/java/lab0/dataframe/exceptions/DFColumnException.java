@@ -2,8 +2,8 @@ package lab0.dataframe.exceptions;
 
 public class DFColumnException extends DFException {
 
-    String colname;
-    int num;
+    final String colname;
+    final int num;
 
     public DFColumnException(String message, String colname, int id) {
         super(message);

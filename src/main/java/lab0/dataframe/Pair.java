@@ -1,11 +1,9 @@
 package lab0.dataframe;
 
-import java.util.Objects;
-
 public class Pair<F, S> {
 
-    F first;
-    S second;
+    private F first;
+    private S second;
 
     Pair(F f, S s) {
         first = f;

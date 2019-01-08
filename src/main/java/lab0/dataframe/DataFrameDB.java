@@ -3,8 +3,12 @@ package lab0.dataframe;
 import lab0.dataframe.exceptions.*;
 import lab0.dataframe.groupby.Applyable;
 import lab0.dataframe.groupby.GroupBy;
-import lab0.dataframe.values.*;
+import lab0.dataframe.values.NumericValue;
+import lab0.dataframe.values.StringValue;
+import lab0.dataframe.values.TypeEnum;
+import lab0.dataframe.values.Value;
 
+import java.io.FileReader;
 import java.sql.*;
 import java.util.*;
 
@@ -18,7 +22,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
     private final Class<? extends Value>[] types;
     private final Value.ValueBuilder[] factories;
     private final String recordAdder;
-    protected DBConnection connection;
+    protected final DBConnection connection;
 
     private DataFrameDB(DBConnection connection, String tableName, String[] colNames, Class<? extends Value>[] types) {
         super(colNames.length);
@@ -36,14 +40,14 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         }
         size();
 
-        StringBuilder qmarks = new StringBuilder();
+        StringBuilder questionMarks = new StringBuilder();
         for (int i = 0; i < colNames.length; i++) {
-            qmarks.append("?");
+            questionMarks.append("?");
             if (i < colNames.length - 1)
-                qmarks.append(",");
+                questionMarks.append(",");
         }
 
-        recordAdder = String.format("INSERT into %s VALUES (%s)", tableName, qmarks);
+        recordAdder = String.format("INSERT into %s VALUES (%s)", tableName, questionMarks);
     }
 
     public static Builder getBuilder() {
@@ -245,10 +249,10 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
     protected static class DBConnection implements AutoCloseable {
         Connection connection;
-        String url;
-        String user;
-        String password;
-        Map<String, PreparedStatement> preparedStatements;
+        final String url;
+        final String user;
+        final String password;
+        final Map<String, PreparedStatement> preparedStatements;
         Statement stmt;
 
         DBConnection(String url, String user, String password) {
@@ -306,7 +310,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         }
 
         public void setAutoCommit(boolean b) throws SQLException {
-            connection.setAutoCommit(b);
+            connect().setAutoCommit(b);
         }
 
         public void commit() throws SQLException {
@@ -337,6 +341,80 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
             return this;
         }
 
+        public DataFrameDB build(FileReader in, String[] name, Class<? extends Value>[] types) throws SQLException {
+            if (url != null && password != null && user != null) {
+                Scanner bufferedReader = new Scanner(in);
+                if (name == null) {
+                    name = bufferedReader.nextLine().split(",");
+                }
+                StringBuilder builder = new StringBuilder("create table ");
+                builder.append(tableName);
+                builder.append("(");
+                for (int i = 0; i < types.length; i++) {
+                    builder.append(name[i]).append(" ");
+                    builder.append(TypeEnum.Type.getType(types[i]).getSql());
+                    if (i < types.length - 1)
+                        builder.append(",");
+                }
+                builder.append(")");
+
+                DBConnection connection = new DBConnection(url, user, password);
+                connection.setAutoCommit(false);
+                try {
+                    connection.getStatement().executeUpdate("drop table " + tableName);
+
+                } catch (SQLException ignored) {
+                }
+                connection.getStatement().executeUpdate(builder.toString());
+
+                StringBuilder values = new StringBuilder();
+                StringBuilder columnNames = new StringBuilder();
+                columnNames.append("(");
+                for (int i = 0; i < name.length; i++) {
+                    columnNames.append(name[i]);
+                    if (i < name.length - 1)
+                        columnNames.append(",");
+                }
+                columnNames.append(")");
+                bufferedReader.useDelimiter("[,\n]");
+                int count = 0,row=0;
+                while (bufferedReader.hasNext()) {
+                    if (count == 0)
+                        values.append("(");
+                    else
+                        values.append(",(");
+
+                    for (int i = 0; i < name.length; i++) {
+                        values.append("'").append(bufferedReader.next()).append("'");
+                        if(i<name.length-1)
+                            values.append(",");
+                    }
+                    values.append(")");
+                    count++;
+
+                    if (count > 10000) {
+                        String s ="insert into " + tableName + columnNames + " VALUES" + values.toString();
+
+                        connection.getStatement().executeUpdate(s);
+                        row+=count;
+                        connection.commit();
+                        values = new StringBuilder();
+                        count = 0;
+                    }
+                    bufferedReader.nextLine();
+                }
+                if (count > 0)
+                    connection.getStatement().executeUpdate("insert into " + tableName + columnNames + " VALUES" + values.toString());
+
+
+                connection.commit();
+                connection.setAutoCommit(true);
+                return new DataFrameDB(connection, tableName, name, types);
+
+            }
+            throw new IllegalStateException("Improper initial DB state");
+        }
+
         public DataFrameDB build() throws SQLException {
             if (url != null && password != null && user != null) {
 
@@ -355,9 +433,8 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
                 Class<? extends Value>[] types = typeList.toArray(new Class[0]);
                 String[] colNames = nameList.toArray(new String[0]);
                 rs.close();
-                DataFrameDB db = new DataFrameDB(connection, tableName, colNames, types);
 
-                return db;
+                return new DataFrameDB(connection, tableName, colNames, types);
 
             }
             throw new IllegalStateException("Improper initial DB state");
@@ -367,7 +444,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
     protected class DBColumn extends Column implements AutoCloseable {
 
-        private int index;
+        private final int index;
 
         DBColumn(int i) {
             super(colNames[i], types[i]);
@@ -454,15 +531,6 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
             throw new CloneNotSupportedException();
         }
 
-        @Override
-        public int hashCode() {
-            return super.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return super.equals(obj);
-        }
 
         @Override
         public void add(Value o) throws DFColumnTypeException {
@@ -518,15 +586,15 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
 
     class GroupByDF implements GroupBy {
 
-        String groupby;
-        String[] other;
-        String[] otherNumeric;
+        final String groupBy;
+        final String[] other;
+        final String[] otherNumeric;
         Map<Integer, DataFrame> groupedDF;
         DataFrame values;
 
         GroupByDF(String... colname) {
 
-            groupby = String.join(", ", colname);
+            groupBy = String.join(", ", colname);
             ArrayList<String> ls = new ArrayList<>(Arrays.asList(getNames()));
             ls.removeAll(Arrays.asList(colname));
 
@@ -599,9 +667,9 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         private DataFrame getApplied(String operation) throws DFApplyableException {
 
             String sql;
-            if (groupby.length() > 0)
-//                    //"select "+groupby+", "+operation+" from "+tableName+" group by "+groupby+" order by "+groupby; //
-                sql = String.format("select %1$s,%2$s from %3$s group by %1$s order by %1$s", groupby, operation, tableName);
+            if (groupBy.length() > 0)
+//                    //"select "+groupBy+", "+operation+" from "+tableName+" group by "+groupBy+" order by "+groupBy; //
+                sql = String.format("select %1$s,%2$s from %3$s group by %1$s order by %1$s", groupBy, operation, tableName);
             else
                 sql = String.format("select %s from %s order by %s", operation, tableName, operation);
 
@@ -646,11 +714,10 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
         }
 
 
-
         private void initGroups() throws DFApplyableException {
             DataFrame values;
 
-            try (ResultSet rs = connection.executeQuery(String.format("select distinct %s from %s order by %s", groupby, tableName, groupby))) {
+            try (ResultSet rs = connection.executeQuery(String.format("select distinct %s from %s order by %s", groupBy, tableName, groupBy))) {
                 values = fromSelect(rs);
             } catch (SQLException e) {
                 throw new DFApplyableExceptionSQL(e);
@@ -662,7 +729,7 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
             String otherNames = String.join(",", other);
 
             groupedDF = new HashMap<>();
-            String[] group_col_id = groupby.split(", ");
+            String[] group_col_id = groupBy.split(", ");
 
             for (int i = 0; i < values.size(); i++) {
                 Value[] row = values.getRecord(i);

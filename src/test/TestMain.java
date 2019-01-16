@@ -7,7 +7,9 @@ import lab0.dataframe.exceptions.DFValueBuildException;
 import lab0.dataframe.groupby.GroupBy;
 import lab0.dataframe.values.*;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,14 +17,26 @@ import java.util.concurrent.Executors;
 @SuppressWarnings("ALL")
 class TestMain {
 
-    private static void log(String method, long... A) {
-        System.out.print(method);
-        for (long aA : A) {
-            System.out.print("," + aA);
-        }
-        System.out.println();
-    }
 
+    /*todo:
+    * DataFrameProxy
+    * DataFrameNode
+    * OPerations:
+    * -groupby
+    * -min/max/mean/...
+    *
+    * //storeInfo
+    * //sendInfo
+    * //serializarion
+    * //tasksplitting
+    * //NodeManagement
+    *
+    *
+    *
+    * C -> Proxy
+    *
+    * Proxy -> Node
+    */
     public static void main(String[] argv) throws IOException, DFColumnTypeException, DFApplyableException, CloneNotSupportedException, SQLException, DFValueBuildException {
 //        Class.forName("com.mysql.jdbc.Driver");
 //        DataFrameDB dbA = DataFrameDB.getBuilder()
@@ -41,75 +55,115 @@ class TestMain {
         DataFrame dbA = null;
         GroupBy gA;
         long A;
+        int N = 10;
         String tablename = "large_groupby";
         String path = "test/testData/ultimate/" + tablename + ".csv";
         String name = null;
-        switch (argv[0]) {
-            case "A":
-                name = "DataFrame";
-                break;
-            case "B":
-                name = "Parallel";
-                break;
-            case "C":
-                name = "DataBase";
-                break;
+        String id = "A";
+        boolean b = false;
+
+
+        String[] names = new String[]{"method", "constructor", "groupby_id_date", "groupby_id", "max", "mean", "std"};
+        Class<? extends Value>[] types = new Class[]{StringValue.class, IntegerValue.class, IntegerValue.class, IntegerValue.class, IntegerValue.class, IntegerValue.class, IntegerValue.class};
+        DataFrame results = new DataFrame(names, types);
+        Value[] resultsRow = new Value[names.length];
+        do {
+            switch (id) {
+                case "A":
+                    name = "DataFrame";
+                    break;
+                case "B":
+                    name = "Parallel";
+                    break;
+                case "C":
+                    name = "DataBase";
+                    break;
+            }
+
+            ExecutorService threadPoolC = Executors.newWorkStealingPool(4);
+            int col = 0;
+            resultsRow[col] = Value.builder(types[col]).build(name);
+            col++;
+            A = System.currentTimeMillis();
+            switch (id) {
+                case "A":
+                    dbA = new DataFrame(path, new Class[]{IntegerValue.class, DateTimeValue.class, StringValue.class, DoubleValue.class, FloatValue.class});
+                    break;
+                case "B":
+                    dbA = new DataFrameThreaded(threadPoolC, path, new Class[]{IntegerValue.class, DateTimeValue.class, StringValue.class, DoubleValue.class, FloatValue.class});
+                    break;
+                case "C":
+                    dbA = DataFrameDB.getBuilder()
+                            .setUrl("jdbc:mysql://mysql.agh.edu.pl/krzysst")
+                            .setLogin("krzysst", "2JuPF0y9TSCvuUsL")
+                            .setName("ultimate5").build();//.build(new FileReader(path),null,new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
+                    break;
+            }
+            A = System.currentTimeMillis() - A;
+            resultsRow[col] = Value.builder(types[col]).build(String.valueOf(A));
+            col++;
+
+            A = System.currentTimeMillis();
+            gA = dbA.groupBy("id", "date");
+            A = System.currentTimeMillis() - A;
+
+            resultsRow[col] = Value.builder(types[col]).build(String.valueOf(A));
+            col++;
+
+            A = System.currentTimeMillis();
+            gA = dbA.groupBy("id");
+            A = System.currentTimeMillis() - A;
+
+            resultsRow[col] = Value.builder(types[col]).build(String.valueOf(A));
+            col++;
+
+
+            A = System.currentTimeMillis();
+            gA.max();
+            A = System.currentTimeMillis() - A;
+
+            resultsRow[col] = Value.builder(types[col]).build(String.valueOf(A));
+            col++;
+
+
+            A = System.currentTimeMillis();
+            gA.mean();
+            A = System.currentTimeMillis() - A;
+
+            resultsRow[col] = Value.builder(types[col]).build(String.valueOf(A));
+            col++;
+
+
+            A = System.currentTimeMillis();
+            gA.std();
+            A = System.currentTimeMillis() - A;
+
+
+            resultsRow[col] = Value.builder(types[col]).build(String.valueOf(A));
+            col++;
+
+            threadPoolC.shutdown();
+            results.addRecord(resultsRow);
+            switch (id) {
+                case "A":
+                    id = "B";
+                    break;
+                case "B":
+                    id = "C";
+                    break;
+                case "C":
+                    id = "A";
+                    N--;
+                    b = N < 0;
+                    break;
+            }
+            System.out.println(N + "left");
+        } while (!b);
+        results.toCSV(System.out);
+        try (OutputStream o = new FileOutputStream("out.csv")) {
+            results.toCSV(o);
         }
-
-        ExecutorService threadPoolC = Executors.newWorkStealingPool(4);
-        System.out.println("method," + name);
-
-        A = System.currentTimeMillis();
-        switch (argv[0]) {
-            case "A":
-                dbA = new DataFrame(path, new Class[]{IntegerValue.class, DateTimeValue.class, StringValue.class, DoubleValue.class, FloatValue.class});
-                break;
-            case "B":
-                dbA = new DataFrameThreaded(threadPoolC, path, new Class[]{IntegerValue.class, DateTimeValue.class, StringValue.class, DoubleValue.class, FloatValue.class});
-                break;
-            case "C":
-                dbA = DataFrameDB.getBuilder()
-                        .setUrl("jdbc:mysql://mysql.agh.edu.pl/krzysst")
-                        .setLogin("krzysst", "2JuPF0y9TSCvuUsL")
-                        .setName("ultimate5").build();//.build(new FileReader(path),null,new Class[]{StringValue.class, DateTimeValue.class, DoubleValue.class, FloatValue.class});
-                break;
-        }
-        A = System.currentTimeMillis() - A;
-
-        log("constructor", A);
-
-        A = System.currentTimeMillis();
-        gA = dbA.groupBy("id", "date");
-        A = System.currentTimeMillis() - A;
-
-        log("groupby_id_date", A);
-
-        A = System.currentTimeMillis();
-        gA = dbA.groupBy("id");
-        A = System.currentTimeMillis() - A;
-
-        log("groupby_id", A);
-
-
-        A = System.currentTimeMillis();
-        gA.max();
-        A = System.currentTimeMillis() - A;
-
-        log("max", A);
-
-
-        A = System.currentTimeMillis();
-        gA.mean();
-        A = System.currentTimeMillis() - A;
-
-        log("mean", A);
-
-        A = System.currentTimeMillis();
-        gA.std();
-        A = System.currentTimeMillis() - A;
-
-
-        log("std", A);
+        System.out.println(results.groupBy("method").mean());
 
 //        threadPoolA.shutdown();
         //Executors.newWorkStealingPool(10);
@@ -188,8 +242,6 @@ class TestMain {
 //
 
 
-        threadPoolC.shutdown();
-
 //[id]single 7139.00
 //[id]single 8971.00
 //[id]single 9063.50
@@ -233,7 +285,6 @@ class TestMain {
 //[id]multi 7323.50
 //[id]multi 7304.50
     }
-
 //        DataFrame gA = dbA.groupBy("CountryCode").max();
 //        DataFrame gB = dbB.groupBy("CountryCode").max();
 //        DataFrame gC = dbC.groupBy("CountryCode").max();

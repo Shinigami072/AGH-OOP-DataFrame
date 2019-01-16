@@ -3,10 +3,11 @@ package lab0.dataframe.values;
 
 import lab0.dataframe.exceptions.DFValueBuildException;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
-public abstract class Value<T> implements Cloneable {
+public abstract class Value<T> implements Cloneable,Serializable {
     public Value operate(OPERATION_TYPES operation, Value operand) {
         switch (operation) {
             case ADD:

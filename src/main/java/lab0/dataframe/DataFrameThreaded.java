@@ -10,7 +10,13 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class DataFrameThreaded extends DataFrame {
-    private final ExecutorService executorService;
+    private transient ExecutorService executorService;
+    private void readObject(java.io.ObjectInputStream stream)
+            throws IOException, ClassNotFoundException{
+
+        stream.defaultReadObject();
+        executorService=DefultSingletons.defaultExecutor;
+    }
 
     public DataFrameThreaded(ExecutorService executorService, DataFrame df) {
         this(executorService, df.getNames(), df.getTypes());
@@ -509,7 +515,7 @@ public class DataFrameThreaded extends DataFrame {
 
     }
 
-    class GroupHolderThreaded implements GroupBy {
+    public class GroupHolderThreaded implements GroupBy {
 
         final Map<ValueGroup, DataFrame> groups;
         final SortedSet<ValueGroup> orderedKeys;
@@ -529,6 +535,19 @@ public class DataFrameThreaded extends DataFrame {
             this.data_names = data_names.toArray(new String[0]);
         }
 
+        public Map<ValueGroup,DataFrame> getGroups(){
+            Map<ValueGroup,DataFrame> maps = new TreeMap<>();
+            for (ValueGroup k:groups.keySet()) {
+                DataFrame df = groups.get(k);
+
+                if(df instanceof DataFrameSparse){
+                    ((DataFrameSparse)df).optimizeStorage();
+                }
+                maps.put(k,df);
+            }
+
+            return maps;
+        }
         @Override
         public DataFrame apply(Applyable apply) throws DFApplyableException {
             //code to reduce groups using applyable

@@ -9,6 +9,7 @@ import lab0.dataframe.values.TypeEnum;
 import lab0.dataframe.values.Value;
 
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 
@@ -24,6 +25,14 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
     private final String recordAdder;
     protected final DBConnection connection;
 
+    private void readObject(java.io.ObjectInputStream stream)
+            throws IOException, ClassNotFoundException{
+        throw new UnsupportedOperationException("unable to serialize DataBaseBased Dataframe");
+    }
+    private void writeObject(java.io.ObjectOutputStream stream)
+            throws IOException{
+        throw new UnsupportedOperationException("unable to serialize DataBaseBased Dataframe");
+    }
     private DataFrameDB(DBConnection connection, String tableName, String[] colNames, Class<? extends Value>[] types) {
         super(colNames.length);
         this.connection = connection;
@@ -443,6 +452,15 @@ public class DataFrameDB extends DataFrame implements AutoCloseable {
     }
 
     protected class DBColumn extends Column implements AutoCloseable {
+
+        private void readObject(java.io.ObjectInputStream stream)
+                throws IOException, ClassNotFoundException{
+            throw new UnsupportedOperationException("unable to serialize DataBaseBased Dataframe");
+        }
+        private void writeObject(java.io.ObjectOutputStream stream)
+                throws IOException{
+            throw new UnsupportedOperationException("unable to serialize DataBaseBased Dataframe");
+        }
 
         private final int index;
 

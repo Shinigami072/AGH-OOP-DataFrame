@@ -4,12 +4,10 @@ import lab0.dataframe.exceptions.*;
 import lab0.dataframe.groupby.GroupBy;
 import lab0.dataframe.values.Value;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
-public class DataFrame {
+public class DataFrame implements Serializable {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected Column[] columns;
 
@@ -42,6 +40,7 @@ public class DataFrame {
         }
 
     }
+
     //file loading constructors -
     //true - file contains column names
     public DataFrame(String path, Class<? extends Value>[] column_type) throws IOException, DFColumnTypeException, DFValueBuildException {
@@ -262,10 +261,32 @@ public class DataFrame {
 
     }
 
+    public void toCSV(OutputStream out) {
+        toCSV(out, ",");
+    }
+
+    public static String[] transform(Value[] row) {
+        String[] out = new String[row.length];
+        for (int i = 0; i < row.length; i++) {
+            out[i] = row[i].toString();
+        }
+        return out;
+    }
+
+    public void toCSV(OutputStream out, String token) {
+        PrintWriter outPrint = new PrintWriter(out);
+        outPrint.println(String.join(token, getNames()));
+
+        for (int i = 0; i < size(); i++) {
+            outPrint.println(String.join(token, transform(getRecord(i))));
+        }
+        outPrint.flush();
+    }
+
     /**
      * Data container
      */
-    public static class Column {
+    public static class Column implements Serializable {
         final ArrayList<Value> dane;
 
         /**
@@ -474,7 +495,7 @@ public class DataFrame {
         return s.toString();
     }
 
-    protected class ValueGroup implements Comparable<ValueGroup> {
+    public class ValueGroup implements Comparable<ValueGroup>, Serializable {
         private final Value[] id;
 
         @Override
@@ -518,6 +539,13 @@ public class DataFrame {
                     return 1;
             }
             return 0;
+        }
+
+        public Class<? extends Value>[] getTypes() {
+            Class<? extends Value>[] keys = new Class[id.length];
+            for (int i = 0; i < keys.length; i++)
+                keys[i] = id[i].getClass();
+            return keys;
         }
     }
 

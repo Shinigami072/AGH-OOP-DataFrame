@@ -81,6 +81,16 @@ public final class BasicGroupHolder implements GroupBy {
         }
 
     }
+    public String toString(){
+        StringBuilder builder = new StringBuilder("Groups:\n");
+        int i=0;
+        for (DataFrame d:groups) {
+            builder.append("Group:").append(Arrays.toString(id_values.getRecord(i++))).append('\n');
+            builder.append(d).append('\n');
+        }
+
+        return builder.toString();
+    }
 
 
 }

@@ -7,6 +7,9 @@ import lab0.dataframe.exceptions.DFValueBuildException;
 import lab0.dataframe.values.Value;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DataFrameSparse extends DataFrame {
 
@@ -87,7 +90,6 @@ public class DataFrameSparse extends DataFrame {
      *
      * @param i nr wiersza
      * @return Wiersz
-
      */
     @Override
     public DataFrameSparse iloc(int i) {
@@ -264,9 +266,21 @@ public class DataFrameSparse extends DataFrame {
 
     }
 
+    Value[] getHidden() {
+        Value[] hidden = new Value[getColCount()];
+        for (int i = 0; i < getColCount(); i++) {
+            hidden[i] = ((SparseColumn) columns[i]).hidden;
+        }
+        return hidden;
+    }
+    public void optimizeStorage(){
+        for (Column c:columns){
+            ((SparseColumn)c).optimizeStorage();
+        }
+    }
     public static class SparseColumn extends Column {
 
-        final Value hidden;
+        Value hidden;
         int size;
 
         /**
@@ -344,6 +358,55 @@ public class DataFrameSparse extends DataFrame {
 
             return hidden;
         }
+
+        void optimizeStorage() {
+            int unique = size()-uniqueSize();
+
+            Map<Value, Integer> counts = new HashMap<>(unique);
+
+            //count occurences.
+            for (Value value : dane)
+                counts.compute(((COOValue) value).value, (key, val) -> val == null ? 1 : val + 1);
+            int max = unique;
+
+            //find best compressor
+            Value max_key = hidden;
+            for (Value key : counts.keySet()) {
+                int count = counts.get(key);
+                if (max < count) {
+                    max = count;
+                    max_key = key;
+                }
+            }
+
+
+            //optimize if possible
+            if (max_key != hidden) {
+                int size = size();
+                ArrayList<Value> newDane = new ArrayList<>(size);
+                for (int i = 0, j = 0; i < size(); i++) {
+                    COOValue val = (COOValue) dane.get(j);
+
+                    if (val.index > i) {
+                        newDane.add(new COOValue(i, hidden));
+                        continue;
+                    } else if (val.value.neq(max_key)) {
+                        newDane.add(new COOValue(i, val.value));
+                    }
+
+                    j++;
+                    if(j>=dane.size()) {
+                        for (;i<size();i++)
+                            newDane.add(new COOValue(i, hidden));
+                    }
+
+                }
+                hidden=max_key;
+                dane.clear();
+                dane.addAll(newDane);
+            }
+        }
+
 
         @Override
         protected Column performOperation(Value.OPERATION_TYPES operation, Value operand) {

@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="WorkerNode">
+    <output-path>$PROJECT_DIR$/out/artifacts/WorkerNode</output-path>
+    <root id="archive" name="WorkerNode.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/main/workerNode/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="OOP" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/mysql-connector-java-8.0.13/mysql-connector-java-8.0.13.jar" path-in-jar="/" />
+      <element id="library" level="project" name="mysql-connector-java-5.1" />
+    </root>
+  </artifact>
+</component>

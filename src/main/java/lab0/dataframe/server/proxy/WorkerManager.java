@@ -1,5 +1,6 @@
 package lab0.dataframe.server.proxy;
 
+import lab0.dataframe.DataFrame;
 import lab0.dataframe.server.protocol.Task;
 import lab0.dataframe.server.protocol.WorkerCommType;
 import lab0.dataframe.server.protocol.WorkerProtocolParser;
@@ -103,6 +104,10 @@ class WorkerManager implements Comparable<WorkerManager>, Runnable {
 
                             case TASK_REJECTED:
                                 status = WorkerStatus.IDLE;//todo: graceful rejection
+                                current = Task.REJECTED;
+                                synchronized (this) {
+                                    this.notifyAll();
+                                }
                                 break;
 
                         }
@@ -154,7 +159,7 @@ class WorkerManager implements Comparable<WorkerManager>, Runnable {
 
     public Object[] request(Task type, Object... arguments) throws InterruptedException {
         synchronized (this) {
-            while (status != WorkerStatus.IDLE) {
+            while (status != WorkerStatus.IDLE && current == Task.NONE) {
                 if (status != WorkerStatus.WORKING && status != WorkerStatus.REQUESTING) {
                     this.notifyAll();
                     throw new InterruptedException();
@@ -168,14 +173,28 @@ class WorkerManager implements Comparable<WorkerManager>, Runnable {
 
             this.arguments = arguments;
 
-            System.out.println(this + "request recieved " + type + ":" + Arrays.toString(arguments));
+            System.out.println(this + "request recieved " + type + ":");
             this.notify();
 
 
             while (current != Task.NONE) {
-                System.out.println(this + "request results wait");
+                System.out.print(this + "request results wait");
+                for (Object o : arguments) {
+                    if (o instanceof DataFrame)
+                        System.out.print(Arrays.toString(((DataFrame) o).getNames()));
+                    else
+                        System.out.print(o);
+                    System.out.print(" ");
+                }
+                System.out.println();
                 this.wait();
             }
+
+            if (current == Task.REJECTED) {
+                current = Task.NONE;
+                throw new InterruptedException();
+            }
+            System.out.println(this + "request results recieved");
 
             return result;
 

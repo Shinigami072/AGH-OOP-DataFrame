@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 
@@ -82,6 +83,7 @@ public class WorkerNode {
     }
 
     private static void executeTask(Task task) throws IOException, InterruptedException, DFApplyableException {
+        System.out.println(task + " started");
         switch (task) {
             case NONE:
                 break;
@@ -90,38 +92,40 @@ public class WorkerNode {
                 parser.completePacket();
                 break;
             case GROUP:
-                System.out.println(task + " started");
 
                 if (parser.readInt() != 2)
                     throw new IllegalStateException("Wrong apply packet");
 
                 String[] names = parser.readColnames();
 
-                DataFrameThreaded threaded = new DataFrameThreaded(DefultSingletons.defaultExecutor, parser.writeDataFrame());
+                DataFrameThreaded threaded = new DataFrameThreaded(DefultSingletons.defaultExecutor, parser.readDataFrame());
+                System.out.println("processing "+threaded.size());
+
                 DataFrameThreaded.GroupHolderThreaded groups = (DataFrameThreaded.GroupHolderThreaded) threaded.groupBy(names);
+                System.out.println("storage optimization ");
                 Map<DataFrame.ValueGroup,DataFrame>grp =groups.getGroups();
-                System.out.println(grp);
-                System.out.println(task + "  ended");
+                System.out.println("result "+grp.size());
                 parser.completePacket(grp);
 
                 break;
             case APPLY:
-                System.out.println(task + " started");
 
                 if (parser.readInt() != 2)
                     throw new IllegalStateException("Wrong apply packet");
 
                 ApplyOperation op = parser.readApplyOperation();
-
-                DataFrame df = parser.writeDataFrame();
-                System.out.println(df);
+                System.out.println(op);
+                DataFrame df = parser.readDataFrame();
+                System.out.println("processing "+df.size() + ":"+Arrays.asList(df.getNames()) + ":"+Arrays.asList(df.getTypes()));
                 DataFrame apply = op.getApplyable().apply(df);
+                System.out.println("result "+apply.size());
 
                 parser.completePacket(apply);
-                System.out.println(task + "  ended");
                 break;
 
         }
+        System.out.println(task + "  ended");
+
     }
 }
 

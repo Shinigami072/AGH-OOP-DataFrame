@@ -17,7 +17,7 @@ public class clientTaskTest {
         String tablename = "large_groupby";
         String path = "test/testData/ultimate/" + tablename + ".csv";
 
-        DataFrame df =new DataFrame(path, new Class[]{IntegerValue.class, DateTimeValue.class, StringValue.class, DoubleValue.class, FloatValue.class});
+        DataFrame df= new DataFrame(path, new Class[]{IntegerValue.class, DateTimeValue.class, StringValue.class, DoubleValue.class, FloatValue.class});
         DataFrameSparse sdf = new DataFrameSparse(df, df.getRecord(0));
         sdf.optimizeStorage();
         //OPtions setup
@@ -41,6 +41,7 @@ public class clientTaskTest {
         System.out.println(testDF.groupBy("id").sum());
         System.out.println(testDF.groupBy("id").std());
         System.out.println(testDF.groupBy("id").var());
+        ((DataFrameServer) testDF).close();
 //        //Connect to server;
 //        System.out.println("sock");
 //        Socket sock = new Socket(args[0].substring(0, port), PortType.CLIENT.getPort());
@@ -61,7 +62,7 @@ public class clientTaskTest {
 //            parser.writeDataFrame(sdf);
 //            parser.flush();
 //        }
-//        DataFrame df1 = parser.readDataFrame();
+//        DataFrame df1 = parser.writeDataFrame();
 //        System.out.println(" group");
 //        parser.writeRequestType(ClientRequestType.GROUP);
 //        parser.writeColnames(new String[]{"a"});
@@ -103,7 +104,7 @@ public class clientTaskTest {
 //            parser.writeDataFrame(sdf);
 //            parser.flush();
 //        }
-//        System.out.println(parser.readDataFrame());
+//        System.out.println(parser.writeDataFrame());
 //        parser.writeRequestType(ClientRequestType.DISCONNECT);
     }
 }

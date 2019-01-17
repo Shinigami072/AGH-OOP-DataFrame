@@ -29,7 +29,6 @@ public class WorkerProtocolParser {
     public void shedulePacket(Task current, Object[] arguments) throws IOException {
         out.writeObject(WorkerCommType.TASK_SCHEDULED);
         out.writeObject(current);
-        if (arguments.length > 0)
             writeObjects(arguments);
     }
 
@@ -81,7 +80,7 @@ public class WorkerProtocolParser {
     public void writeObjects(Object... results) throws IOException {
         out.writeInt(results.length);
         for (Object o : results) {
-            out.writeObject(o);
+            out.writeUnshared(o);
         }
     }
 
@@ -91,7 +90,7 @@ public class WorkerProtocolParser {
         Object[] results = new Object[len];
 
         for (int i = 0; i < len; i++) {
-            results[i] = in.readObject();
+            results[i] = in.readUnshared();
         }
 
         return results;
@@ -99,15 +98,15 @@ public class WorkerProtocolParser {
 
 
 
-    public DataFrame writeDataFrame() throws IOException {
+    public DataFrame readDataFrame() throws IOException {
         try {
-            return (DataFrame) (in.readObject());
+            return (DataFrame) (in.readUnshared());
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException("dataFrame not recieved");
         }
     }
 
-    public void readDataFrame(DataFrame df) throws IOException {
+    public void writeDataFrame(DataFrame df) throws IOException {
         out.writeObject(df);
     }
     public void writeInt(int val) throws IOException {

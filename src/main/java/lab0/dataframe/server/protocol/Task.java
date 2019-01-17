@@ -4,5 +4,5 @@ public enum Task {
     NONE,
     GROUP,
     APPLY,
-    DUMMY, REJECTED,
+    DUMMY, REJECTED, GROUPAPPLY,
 }

@@ -16,36 +16,38 @@ public class WorkerProtocolParser {
     private ObjectOutputStream out;
 
     public void announcePacket(int workers) throws IOException {
-        out.writeObject(WorkerCommType.ANNOUNCE);
+        out.writeUnshared(WorkerCommType.ANNOUNCE);
         out.writeInt(workers);
         out.flush();
     }
 
     public void disconnectPacket() throws IOException {
-        out.writeObject(WorkerCommType.DISCONNECT);
+        out.writeUnshared(WorkerCommType.DISCONNECT);
         out.flush();
     }
 
     public void shedulePacket(Task current, Object[] arguments) throws IOException {
-        out.writeObject(WorkerCommType.TASK_SCHEDULED);
-        out.writeObject(current);
+        out.writeUnshared(WorkerCommType.TASK_SCHEDULED);
+        out.writeUnshared(current);
             writeObjects(arguments);
+        out.flush();
     }
 
     public void completePacket(Object... results) throws IOException {
-        out.writeObject(WorkerCommType.TASK_COMPLETED);
+        out.writeUnshared(WorkerCommType.TASK_COMPLETED);
         writeObjects(results);
         out.flush();
     }
 
     public void rejectPacket() throws IOException {
-        out.writeObject(WorkerCommType.TASK_REJECTED);
+        out.writeUnshared(WorkerCommType.TASK_REJECTED);
+        out.writeUnshared(WorkerCommType.TASK_REJECTED);
         out.flush();
     }
 
     public WorkerCommType readType() throws IOException {
         try {
-            return (WorkerCommType) in.readObject();
+            return (WorkerCommType) in.readUnshared();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             throw new IllegalStateException("commType not recieved");
@@ -54,7 +56,7 @@ public class WorkerProtocolParser {
 
     public Task readTask() throws IOException {
         try {
-            return (Task) in.readObject();
+            return (Task) in.readUnshared();
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException("task not recieved");
         }
@@ -62,7 +64,7 @@ public class WorkerProtocolParser {
 
     public ApplyOperation readApplyOperation() throws IOException {
         try {
-            return (ApplyOperation) in.readObject();
+            return (ApplyOperation) in.readUnshared();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             throw new IllegalStateException("ApplyOperation not recieved");
@@ -71,7 +73,7 @@ public class WorkerProtocolParser {
 
     public String[] readColnames() throws IOException {
         try {
-            return (String[]) (in.readObject());
+            return (String[]) (in.readUnshared());
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException("colnames not recieved");
         }
@@ -107,7 +109,7 @@ public class WorkerProtocolParser {
     }
 
     public void writeDataFrame(DataFrame df) throws IOException {
-        out.writeObject(df);
+        out.writeUnshared(df);
     }
     public void writeInt(int val) throws IOException {
          out.writeInt(val);
@@ -117,4 +119,9 @@ public class WorkerProtocolParser {
         return in.readInt();
     }
 
+
+    public void reset() throws IOException {
+        out.flush();
+        out.reset();
+    }
 }

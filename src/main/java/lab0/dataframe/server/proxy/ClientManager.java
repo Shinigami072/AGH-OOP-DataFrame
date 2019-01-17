@@ -1,6 +1,7 @@
 package lab0.dataframe.server.proxy;
 
 import lab0.dataframe.DataFrame;
+import lab0.dataframe.DataFrame.ValueGroup;
 import lab0.dataframe.exceptions.DFColumnTypeException;
 import lab0.dataframe.groupby.GroupBy;
 import lab0.dataframe.server.protocol.ApplyOperation;
@@ -20,9 +21,9 @@ public class ClientManager implements Runnable {
     private ExecutorService exec;
     private ClientProtocolParser parser;
     private Map<Integer, DataFrame> DF;
-    private Map<Integer, Map<String, Map<DataFrame.ValueGroup, DataFrame>>> GDF;
+    private Map<Integer, Map<String, Map<ValueGroup, DataFrame>>> GDF;
 
-    public ClientManager(Socket comm, BlockingQueue<WorkerManager> managers, ExecutorService exec) throws IOException {
+    ClientManager(Socket comm, BlockingQueue<WorkerManager> managers, ExecutorService exec) throws IOException {
         System.out.println(comm);
         this.comm = comm;
         this.managers = managers;
@@ -52,8 +53,8 @@ public class ClientManager implements Runnable {
     private DataFrame apply(int hashDF, String key, String[] colnames, ApplyOperation apply) throws InterruptedException {
         DataFrame output = null;
 
-        Map<DataFrame.ValueGroup, DataFrame> grouped = GDF.get(hashDF).get(key);
-        SortedSet<DataFrame.ValueGroup> sortedKeys = new TreeSet<>(grouped.keySet());
+        Map<ValueGroup, DataFrame> grouped = GDF.get(hashDF).get(key);
+        SortedSet<ValueGroup> sortedKeys = new TreeSet<>(grouped.keySet());
 
         Set<String> allnames = new HashSet<>(Arrays.asList(grouped.values().iterator().next().getNames()));
         allnames.removeAll(Arrays.asList(colnames));
@@ -75,7 +76,7 @@ public class ClientManager implements Runnable {
         }
 
         List<ApplyableWorker> workers = new ArrayList<>();
-        for (DataFrame.ValueGroup group : sortedKeys) {
+        for (ValueGroup group : sortedKeys) {
             workers.add(new ApplyableWorker(grouped.get(group)));
         }
 
@@ -83,11 +84,11 @@ public class ClientManager implements Runnable {
         List<Future<DataFrame>> futures = exec.invokeAll(workers);
         try {
 
-            Iterator<DataFrame.ValueGroup> keyInt = sortedKeys.iterator();
+            Iterator<ValueGroup> keyInt = sortedKeys.iterator();
             for (Future<DataFrame> dataFrameFuture : futures) {
 
                 DataFrame df = dataFrameFuture.get();
-                DataFrame.ValueGroup k = keyInt.next();
+                ValueGroup k = keyInt.next();
                 System.out.println(this + " merging:" + k + " " + df.size());
                 if (output == null) {
                     System.out.println("ouptput creation");
@@ -115,7 +116,8 @@ public class ClientManager implements Runnable {
             System.out.println("calculating Groups");
 
             DataFrame df = DF.get(HashDF);
-            GDF.get(HashDF).put(key, (Map<DataFrame.ValueGroup, DataFrame>) managers.take().request(Task.GROUP, colnames, df)[0]);
+            Object o =managers.take().request(Task.GROUP, colnames, df)[0];
+            GDF.get(HashDF).put(key, (Map<ValueGroup, DataFrame>)o );
         }
     }
 
@@ -129,9 +131,8 @@ public class ClientManager implements Runnable {
                     case APPLY:
                         ApplyOperation apply = parser.readApplyType();
 
-                        DataFrame response = null;
                         try {
-                            response = ((DataFrame) managers.take().request(Task.APPLY, apply, DF.get(loadDF()))[0]);
+                            DataFrame response = ((DataFrame) managers.take().request(Task.APPLY, apply, DF.get(loadDF()))[0]);
                             System.out.println(this + "sending");
                             parser.writeDataFrame(response);
                         } catch (InterruptedException e) {
@@ -167,20 +168,20 @@ public class ClientManager implements Runnable {
                     case APPLY_GROUP:
                         apply = parser.readApplyType();
                         colnames = parser.readColnames();
-                        key = Arrays.toString(colnames);
 
                         HashDF = loadDF();
 
                         try {
 
                             System.out.println(this + "grouping");
-                        group(HashDF, key, colnames);
+//                        group(HashDF, key, colnames);
 
                         System.out.println(this + "applying");
-                        DataFrame result = apply(HashDF, key, colnames, apply);
+                        DataFrame result = (DataFrame) managers.take().request(Task.GROUPAPPLY, apply, DF.get(HashDF),colnames)[0];// apply(HashDF, key, colnames, apply);
 
                         System.out.println(this + "sending");
                         parser.writeDataFrame(result);
+
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                             System.out.println(this+"unexpected error");

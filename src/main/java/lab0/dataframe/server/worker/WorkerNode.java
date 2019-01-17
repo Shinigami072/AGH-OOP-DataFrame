@@ -16,7 +16,7 @@ import java.util.Random;
 
 public class WorkerNode {
     public static WorkerProtocolParser parser;
-    public static Random rand = new Random();
+    private static Random rand = new Random();
 
     public static void main(String... args) throws IOException {
 
@@ -34,7 +34,10 @@ public class WorkerNode {
 
 
         //Connect to server;
-        Socket sock = new Socket(args[0].substring(0, port), PortType.WORKER.getPort());
+        Socket sock;
+        try {
+            sock = new Socket(args[0].substring(0, port), PortType.WORKER.getPort());
+
         ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
         ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
 
@@ -42,6 +45,11 @@ public class WorkerNode {
         parser = new WorkerProtocolParser(in, out);
         parser.announcePacket(workerCount);
 
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Connection Error");
+            return;
+        }
         System.out.println("Task Loop");
         try{
         while (true) {
@@ -63,7 +71,7 @@ public class WorkerNode {
                 case TASK_SCHEDULED:
                     try {
                         executeTask(parser.readTask());
-                    } catch (InterruptedException | DFApplyableException e) {
+                    } catch (InterruptedException | DFApplyableException|IOException e) {
                         e.printStackTrace();
                         parser.rejectPacket();
                     }
@@ -73,6 +81,8 @@ public class WorkerNode {
                     //todo: disconnection detection
                     break;
             }
+            parser.reset();
+
         }
         }finally {
             parser.disconnectPacket();
@@ -122,6 +132,20 @@ public class WorkerNode {
 
                 parser.completePacket(apply);
                 break;
+            case GROUPAPPLY:
+                if (parser.readInt() != 3)
+                    throw new IllegalStateException("Wrong apply packet");
+                op = parser.readApplyOperation();
+                System.out.println(op);
+                df = parser.readDataFrame();
+                String[] colnames = parser.readColnames();
+                System.out.println("recieved DF");
+                System.out.println("processing "+df.size() + ":"+Arrays.asList(df.getNames()) + ":"+Arrays.asList(df.getTypes())+":"+Arrays.asList(colnames));
+                threaded = new DataFrameThreaded(DefultSingletons.defaultExecutor,df);
+                parser.completePacket(threaded.groupBy(colnames).apply(op.getApplyable()));
+
+                break;
+
 
         }
         System.out.println(task + "  ended");

@@ -24,7 +24,7 @@ class WorkerManager implements Comparable<WorkerManager>, Runnable {
     private Object[] arguments;
     private Object[] result;
 
-    public WorkerManager(Socket communicator, BlockingQueue<WorkerManager> workers) throws IOException {
+    WorkerManager(Socket communicator, BlockingQueue<WorkerManager> workers) throws IOException {
         this.communicator = communicator;
         this.status = WorkerStatus.CONNECTING;
         this.available_workers = workers;
@@ -95,6 +95,7 @@ class WorkerManager implements Comparable<WorkerManager>, Runnable {
 
                             case TASK_COMPLETED:
                                 result = parser.readObjects();
+                                parser.reset();
                                 status = WorkerStatus.IDLE;
                                 current = Task.NONE;
                                 synchronized (this) {
@@ -105,6 +106,7 @@ class WorkerManager implements Comparable<WorkerManager>, Runnable {
                             case TASK_REJECTED:
                                 status = WorkerStatus.IDLE;//todo: graceful rejection
                                 current = Task.REJECTED;
+                                parser.reset();
                                 synchronized (this) {
                                     this.notifyAll();
                                 }
@@ -182,6 +184,8 @@ class WorkerManager implements Comparable<WorkerManager>, Runnable {
                 for (Object o : arguments) {
                     if (o instanceof DataFrame)
                         System.out.print(Arrays.toString(((DataFrame) o).getNames()));
+                    else if (o instanceof Object[])
+                        System.out.println(Arrays.toString((Object[]) o));
                     else
                         System.out.print(o);
                     System.out.print(" ");
